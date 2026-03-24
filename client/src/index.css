@@ -1,0 +1,237 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+:root {
+  /* CumbreCert Mountain Green Palette */
+  --color-mountain-dark: #1B5E20;
+  --color-mountain-medium: #2E7D32;
+  --color-mountain-light: #8BC34A;
+  --color-mountain-surface: #F1F8E9;
+  --color-mountain-text: #2D2D2D;
+  --color-mountain-dark-bg: #1A1A1A;
+  --color-mountain-warning: #FF8F00;
+  
+  /* Primary colors mapped to mountain palette */
+  --primary: #1B5E20;
+  --primary-foreground: #F1F8E9;
+  --sidebar-primary: #1B5E20;
+  --sidebar-primary-foreground: #F1F8E9;
+  --chart-1: #8BC34A;
+  --chart-2: #2E7D32;
+  --chart-3: #1B5E20;
+  --chart-4: #1A1A1A;
+  --chart-5: #2D2D2D;
+  --radius: 0.5rem;
+  --background: oklch(1 0 0);
+  --foreground: #2D2D2D;
+  --card: oklch(1 0 0);
+  --card-foreground: #2D2D2D;
+  --popover: oklch(1 0 0);
+  --popover-foreground: #2D2D2D;
+  --secondary: #F1F8E9;
+  --secondary-foreground: #2D2D2D;
+  --muted: #F1F8E9;
+  --muted-foreground: #666666;
+  --accent: #8BC34A;
+  --accent-foreground: #1A1A1A;
+  --destructive: #FF6B6B;
+  --destructive-foreground: oklch(1 0 0);
+  --border: #C8E6C9;
+  --input: #F1F8E9;
+  --ring: #1B5E20;
+  --sidebar: oklch(1 0 0);
+  --sidebar-foreground: #2D2D2D;
+  --sidebar-accent: #F1F8E9;
+  --sidebar-accent-foreground: #1B5E20;
+  --sidebar-border: #C8E6C9;
+  --sidebar-ring: #1B5E20;
+}
+
+.dark {
+  --primary: #8BC34A;
+  --primary-foreground: #1A1A1A;
+  --sidebar-primary: #8BC34A;
+  --sidebar-primary-foreground: #1A1A1A;
+  --background: #1A1A1A;
+  --foreground: #F5F5F5;
+  --card: #2D2D2D;
+  --card-foreground: #F5F5F5;
+  --popover: #2D2D2D;
+  --popover-foreground: #F5F5F5;
+  --secondary: #2E7D32;
+  --secondary-foreground: #F5F5F5;
+  --muted: #3D3D3D;
+  --muted-foreground: #AAAAAA;
+  --accent: #8BC34A;
+  --accent-foreground: #1A1A1A;
+  --destructive: #FF6B6B;
+  --destructive-foreground: oklch(1 0 0);
+  --border: #3D3D3D;
+  --input: #3D3D3D;
+  --ring: #8BC34A;
+  --chart-1: #8BC34A;
+  --chart-2: #2E7D32;
+  --chart-3: #1B5E20;
+  --chart-4: #F1F8E9;
+  --chart-5: #CCCCCC;
+  --sidebar: #2D2D2D;
+  --sidebar-foreground: #F5F5F5;
+  --sidebar-accent: #2E7D32;
+  --sidebar-accent-foreground: #F5F5F5;
+  --sidebar-border: #3D3D3D;
+  --sidebar-ring: #8BC34A;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'DM Sans', sans-serif;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+  }
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [type="button"]:not(:disabled),
+  [type="submit"]:not(:disabled),
+  [type="reset"]:not(:disabled),
+  a[href],
+  select:not(:disabled),
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled) {
+    @apply cursor-pointer;
+  }
+}
+
+@layer components {
+  .container {
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .flex {
+    min-height: 0;
+    min-width: 0;
+  }
+
+  /* CumbreCert CTA Button - Primary */
+  .btn-cta {
+    @apply px-6 py-3 bg-[#1B5E20] text-white font-bold text-sm uppercase tracking-wide rounded-sm transition-all duration-300 hover:bg-[#2E7D32] hover:scale-105 active:scale-95 shadow-md hover:shadow-lg;
+  }
+
+  /* CumbreCert CTA Button - Secondary (White on dark) */
+  .btn-cta-secondary {
+    @apply px-6 py-3 bg-white text-[#1B5E20] font-bold text-sm uppercase tracking-wide rounded-sm transition-all duration-300 hover:bg-[#F1F8E9] hover:scale-105 active:scale-95 shadow-md hover:shadow-lg;
+  }
+
+  /* Section with diagonal cut */
+  .section-diagonal {
+    position: relative;
+    padding-bottom: 5rem;
+  }
+
+  .section-diagonal::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 4rem;
+    background: inherit;
+    clip-path: polygon(0 8%, 100% 0, 100% 100%, 0 100%);
+  }
+
+  /* Badge styles */
+  .badge-free {
+    @apply inline-block px-3 py-1 bg-[#8BC34A] text-[#1A1A1A] text-xs font-bold uppercase rounded-full;
+  }
+
+  .badge-coming {
+    @apply inline-block px-3 py-1 bg-[#FF8F00] text-white text-xs font-bold uppercase rounded-full;
+  }
+
+  /* Fade in animation */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in-up {
+    animation: fadeInUp 0.6s ease-out forwards;
+  }
+
+  /* Stagger animation delays */
+  .delay-100 { animation-delay: 100ms; }
+  .delay-200 { animation-delay: 200ms; }
+  .delay-300 { animation-delay: 300ms; }
+  .delay-400 { animation-delay: 400ms; }
+
+  @media (min-width: 640px) {
+    .container {
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .container {
+      padding-left: 2rem;
+      padding-right: 2rem;
+      max-width: 1280px;
+    }
+  }
+}
