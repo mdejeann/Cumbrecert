@@ -1,7 +1,9 @@
+import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, Menu, X, Check, AlertCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { Link, useLocation } from "wouter";
 
 /**
  * CumbreCert Home Page — One-pager landing site
@@ -11,6 +13,10 @@ import { motion } from "framer-motion";
  */
 
 export default function Home() {
+  // The userAuth hooks provides authentication state
+  // To implement login/logout functionality, simply call logout() or redirect to getLoginUrl()
+  let { user, loading, error, isAuthenticated, logout } = useAuth();
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [formSubmitted, setFormSubmitted] = useState(false);
@@ -85,10 +91,23 @@ export default function Home() {
             </button>
           </div>
 
-          {/* CTA Button */}
-          <button className="btn-cta hidden sm:block">
-            Comenzá gratis
-          </button>
+          {/* CTA Buttons */}
+          <div className="hidden sm:flex items-center gap-2">
+            {user ? (
+              <Link href="/dashboard">
+                <button className="btn-cta">Mi dashboard</button>
+              </Link>
+            ) : (
+              <>
+                <Link href="/login">
+                  <button className="text-sm font-medium text-[#1B5E20] hover:underline px-3 py-2">Iniciar sesión</button>
+                </Link>
+                <Link href="/register">
+                  <button className="btn-cta">Comenzá gratis</button>
+                </Link>
+              </>
+            )}
+          </div>
 
           {/* Mobile Menu Toggle */}
           <button
@@ -184,10 +203,12 @@ export default function Home() {
             transition={{ duration: 0.6, delay: 0.6 }}
             className="flex flex-col sm:flex-row gap-4 justify-center items-center"
           >
-            <button className="btn-cta bg-white text-[#1B5E20] hover:bg-[#F1F8E9]">
-              Comenzá tu certificación gratis
-            </button>
-            <button className="text-white hover:text-[#8BC34A] transition flex items-center gap-2">
+            <Link href={user ? "/dashboard" : "/register"}>
+              <button className="btn-cta bg-white text-[#1B5E20] hover:bg-[#F1F8E9]">
+                {user ? "Ir a mi dashboard" : "Comenzá tu certificación gratis"}
+              </button>
+            </Link>
+            <button onClick={() => scrollToSection("niveles")} className="text-white hover:text-[#8BC34A] transition flex items-center gap-2">
               ¿Ya tenés experiencia? Ver todos los niveles →
             </button>
           </motion.div>
@@ -287,7 +308,9 @@ export default function Home() {
           </p>
 
           <div className="text-center mt-8">
-            <button className="btn-cta">Comenzá tu certificación gratis</button>
+            <Link href={user ? "/dashboard" : "/register"}>
+              <button className="btn-cta">Comenzá tu certificación gratis</button>
+            </Link>
           </div>
         </div>
       </section>
@@ -337,9 +360,11 @@ export default function Home() {
           </div>
 
           <div className="text-center mt-12">
-            <button className="btn-cta-secondary">
-              Comenzá tu certificación gratis
-            </button>
+            <Link href={user ? "/dashboard" : "/register"}>
+              <button className="btn-cta-secondary">
+                Comenzá tu certificación gratis
+              </button>
+            </Link>
           </div>
         </div>
       </section>
@@ -440,9 +465,11 @@ export default function Home() {
                   ))}
                 </div>
 
-                <button className="btn-cta w-full text-center">
-                  {level.cta}
-                </button>
+                <Link href={level.badge === "free" ? (user ? "/dashboard" : "/register") : "#"}>
+                  <button className="btn-cta w-full text-center">
+                    {level.cta}
+                  </button>
+                </Link>
               </motion.div>
             ))}
           </div>
@@ -550,9 +577,11 @@ export default function Home() {
           </div>
 
           <div className="text-center">
-            <button className="btn-cta-secondary">
-              Comenzá tu certificación gratis
-            </button>
+            <Link href={user ? "/dashboard" : "/register"}>
+              <button className="btn-cta-secondary">
+                Comenzá tu certificación gratis
+              </button>
+            </Link>
           </div>
         </div>
       </section>
@@ -766,7 +795,7 @@ export default function Home() {
               </p>
               <div className="mt-4 flex gap-4">
                 <img
-                  src="/ccam-logo.png"
+                  src="https://d2xsxph8kpxj0f.cloudfront.net/310519663469351135/mDv3jUPJokU654taR8cMEm/ccam-logo-png-Gg5sFfXMjmDzHGPLuYPAGE.webp"
                   alt="CCAM"
                   className="h-8 opacity-60"
                 />
@@ -775,9 +804,11 @@ export default function Home() {
           </div>
 
           <div className="border-t border-gray-700 pt-8">
-            <button className="btn-cta w-full md:w-auto mb-8">
-              Comenzá tu certificación gratis
-            </button>
+            <Link href={user ? "/dashboard" : "/register"}>
+              <button className="btn-cta w-full md:w-auto mb-8">
+                Comenzá tu certificación gratis
+              </button>
+            </Link>
             <p className="text-xs text-gray-500">
               © 2026 CumbreCert. Todos los derechos reservados. ·{" "}
               <a href="#" className="hover:text-gray-400">
