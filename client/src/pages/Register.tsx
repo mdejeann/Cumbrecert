@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Mountain, Eye, EyeOff, Loader2, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 
@@ -17,7 +16,6 @@ export default function Register() {
     apellido: "",
     email: "",
     password: "",
-    region: "",
   });
 
   const register = trpc.auth.register.useMutation({
@@ -137,24 +135,6 @@ export default function Register() {
                     ))}
                   </div>
                 )}
-              </div>
-
-              <div className="space-y-1">
-                <Label className="text-sm font-medium text-gray-700">¿Dónde salís a la montaña?</Label>
-                <Select onValueChange={(val) => setFormData({ ...formData, region: val })}>
-                  <SelectTrigger className="border-gray-200 focus:border-[#1B5E20]">
-                    <SelectValue placeholder="Seleccioná tu región" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="patagonia">Patagonia (Bariloche, El Chaltén)</SelectItem>
-                    <SelectItem value="cuyo">Cuyo (Mendoza, San Juan)</SelectItem>
-                    <SelectItem value="noa">NOA (Salta, Jujuy, Tucumán)</SelectItem>
-                    <SelectItem value="cordoba">Córdoba</SelectItem>
-                    <SelectItem value="pampeana">Pampeana (Sierra de la Ventana)</SelectItem>
-                    <SelectItem value="litoral">Litoral / Mesopotamia</SelectItem>
-                    <SelectItem value="extranjero">Extranjero</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
 
               {/* Benefits list */}
