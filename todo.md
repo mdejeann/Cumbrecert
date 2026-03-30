@@ -41,3 +41,22 @@
 - [x] Vitest tests — 20/20 passing (auth, courses, exams, certificates)
 - [ ] Save checkpoint
 - [ ] Push to GitHub
+
+## Fixes
+- [x] Remove "¿Dónde salís a la montaña?" (region) field from Register form
+- [x] Fix DB error on register: `is_active` column dropped + new columns added to DB
+
+## Admin Panel
+- [ ] Extend DB schema: courses, modules, exam_questions tables
+- [ ] Run DB migrations
+- [ ] Admin tRPC routers: courses CRUD, modules CRUD, questions CRUD, PDF upload, DB viewer
+- [ ] Admin layout with sidebar navigation
+- [ ] Admin page: Courses list + create/edit course
+- [ ] Admin page: Module editor (content markdown + PDF upload)
+- [ ] Admin page: Question editor (multiple choice per module + final exam)
+- [ ] Admin page: DB Viewer (browse tables, run queries)
+- [ ] Admin page: Users list
+- [ ] Protect /admin routes with admin role check
+- [ ] Wire all admin routes in App.tsx
+- [ ] Tests for admin procedures
+- [ ] Checkpoint + push to GitHub

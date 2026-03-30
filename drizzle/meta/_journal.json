@@ -15,6 +15,27 @@
       "when": 1774839164518,
       "tag": "0001_great_psylocke",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1774840958566,
+      "tag": "0002_shocking_silver_centurion",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1774841105063,
+      "tag": "0003_quick_famine",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1774841869537,
+      "tag": "0004_light_bruce_banner",
+      "breakpoints": true
     }
   ]
 }

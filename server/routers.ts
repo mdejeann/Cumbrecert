@@ -8,6 +8,7 @@ import { z } from "zod/v4";
 import bcrypt from "bcryptjs";
 import { TRPCError } from "@trpc/server";
 import { sdk } from "./_core/sdk";
+import { adminRouter } from "./adminRouter";
 
 // ============================================================
 // COURSE CONTENT DATA (Nivel 0 — 5 modules + final exam)
@@ -271,6 +272,8 @@ export const appRouter = router({
       return { courseProgress: courseProgressData, moduleProgress: moduleProgressData, certificates };
     }),
   }),
+
+  admin: adminRouter,
 
   certificates: router({
     getMyCertificates: protectedProcedure.query(async ({ ctx }) => {

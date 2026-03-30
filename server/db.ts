@@ -1,13 +1,18 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, desc, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
   certificates,
   courseProgress,
+  courses,
+  examQuestions,
   InsertCertificate,
   InsertCourseProgress,
+  InsertExamQuestion,
+  InsertModule,
   InsertModuleProgress,
   InsertUser,
   moduleProgress,
+  modules,
   users,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
@@ -91,6 +96,26 @@ export async function getUserByUuid(uuid: string) {
   if (!db) return undefined;
   const result = await db.select().from(users).where(eq(users.uuidPublico, uuid)).limit(1);
   return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getAllUsers() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select({
+    id: users.id,
+    nombre: users.nombre,
+    apellido: users.apellido,
+    email: users.email,
+    role: users.role,
+    createdAt: users.createdAt,
+    lastSignedIn: users.lastSignedIn,
+  }).from(users).orderBy(desc(users.createdAt));
+}
+
+export async function updateUserRole(userId: number, role: "user" | "admin") {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(users).set({ role }).where(eq(users.id, userId));
 }
 
 // ============================================================
@@ -187,4 +212,155 @@ export async function createCertificate(data: InsertCertificate) {
   if (!db) throw new Error("Database not available");
   await db.insert(certificates).values(data);
   return await getCertificateByQr(data.qrCode!);
+}
+
+export async function getAllCertificates() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(certificates).orderBy(desc(certificates.issuedAt));
+}
+
+// ============================================================
+// ADMIN: COURSES HELPERS
+// ============================================================
+
+export async function getAllCourses() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(courses).orderBy(courses.nivel);
+}
+
+export async function getCourseByNivel(nivel: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(courses).where(eq(courses.nivel, nivel)).limit(1);
+  return result.length > 0 ? result[0] : null;
+}
+
+export async function upsertCourse(data: { id?: number; nivel: number; titulo: string; descripcion?: string; precio?: number; activo?: number }) {
+  const db = await getDb();
+  if (!db) return;
+  if (data.id) {
+    await db.update(courses).set({
+      titulo: data.titulo,
+      descripcion: data.descripcion ?? null,
+      precio: data.precio ?? 0,
+      activo: data.activo ?? 1,
+    }).where(eq(courses.id, data.id));
+  } else {
+    await db.insert(courses).values({
+      nivel: data.nivel,
+      titulo: data.titulo,
+      descripcion: data.descripcion ?? null,
+      precio: data.precio ?? 0,
+      activo: data.activo ?? 1,
+    });
+  }
+}
+
+// ============================================================
+// ADMIN: MODULES HELPERS
+// ============================================================
+
+export async function getModulesByCourse(courseId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(modules).where(eq(modules.courseId, courseId)).orderBy(modules.numero);
+}
+
+export async function getModuleById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(modules).where(eq(modules.id, id)).limit(1);
+  return result.length > 0 ? result[0] : null;
+}
+
+export async function upsertModule(data: InsertModule & { id?: number }) {
+  const db = await getDb();
+  if (!db) return;
+  if (data.id) {
+    await db.update(modules).set({
+      titulo: data.titulo,
+      descripcion: data.descripcion ?? null,
+      contenidoMarkdown: data.contenidoMarkdown ?? null,
+      pdfUrl: data.pdfUrl ?? null,
+      pdfNombre: data.pdfNombre ?? null,
+      activo: data.activo ?? 1,
+    }).where(eq(modules.id, data.id));
+  } else {
+    await db.insert(modules).values(data);
+  }
+}
+
+export async function deleteModule(id: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(modules).where(eq(modules.id, id));
+}
+
+// ============================================================
+// ADMIN: EXAM QUESTIONS HELPERS
+// ============================================================
+
+export async function getQuestionsByCourse(courseId: number, examType?: "module" | "final") {
+  const db = await getDb();
+  if (!db) return [];
+  const conditions = examType
+    ? and(eq(examQuestions.courseId, courseId), eq(examQuestions.examType, examType))
+    : eq(examQuestions.courseId, courseId);
+  return await db.select().from(examQuestions).where(conditions).orderBy(examQuestions.orden);
+}
+
+export async function getQuestionsByModule(moduleId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(examQuestions).where(eq(examQuestions.moduleId, moduleId)).orderBy(examQuestions.orden);
+}
+
+export async function upsertQuestion(data: InsertExamQuestion & { id?: number }) {
+  const db = await getDb();
+  if (!db) return;
+  if (data.id) {
+    await db.update(examQuestions).set({
+      pregunta: data.pregunta,
+      opcionA: data.opcionA,
+      opcionB: data.opcionB,
+      opcionC: data.opcionC,
+      opcionD: data.opcionD,
+      respuestaCorrecta: data.respuestaCorrecta,
+      explicacion: data.explicacion ?? null,
+      orden: data.orden ?? 0,
+      activo: data.activo ?? 1,
+    }).where(eq(examQuestions.id, data.id));
+  } else {
+    await db.insert(examQuestions).values(data);
+  }
+}
+
+export async function deleteQuestion(id: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(examQuestions).where(eq(examQuestions.id, id));
+}
+
+// ============================================================
+// ADMIN: DB VIEWER HELPERS
+// ============================================================
+
+export async function getTableStats() {
+  const db = await getDb();
+  if (!db) return [];
+  const tableNames = ["users", "courses", "modules", "exam_questions", "course_progress", "module_progress", "certificates"];
+  const stats = await Promise.all(
+    tableNames.map(async (t) => {
+      try {
+        const result = await db.execute(sql`SELECT COUNT(*) as count FROM ${sql.identifier(t)}`);
+        const rows = result[0] as unknown as { count: number }[];
+        return { table: t, count: Number(rows[0]?.count ?? 0) };
+      } catch {
+        return { table: t, count: 0 };
+      }
+    })
+  );
+  return stats;
 }
