@@ -1,8 +1,9 @@
 import AdminLayout from "@/components/AdminLayout";
 import { trpc } from "@/lib/trpc";
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { toast } from "sonner";
-import { Plus, Edit2, Check, X, BookOpen } from "lucide-react";
+import { Plus, Edit2, Check, X, BookOpen, FileText, HelpCircle, Download, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type CourseForm = {
@@ -18,10 +19,23 @@ const EMPTY_FORM: CourseForm = { nivel: 0, titulo: "", descripcion: "", precio: 
 
 export default function AdminCourses() {
   const utils = trpc.useUtils();
+  const [, navigate] = useLocation();
   const { data: courses, isLoading } = trpc.admin.getCourses.useQuery();
   const upsertMutation = trpc.admin.upsertCourse.useMutation({
     onSuccess: () => { toast.success("Curso guardado"); utils.admin.getCourses.invalidate(); setEditing(null); },
     onError: (e) => toast.error(e.message),
+  });
+  const seedMutation = trpc.admin.seedNivel0.useMutation({
+    onSuccess: (data) => {
+      if (data.skipped) {
+        toast.info("El contenido ya estaba cargado en la base de datos.");
+      } else {
+        toast.success("¡Contenido del Nivel 0 cargado exitosamente!");
+      }
+      utils.admin.getCourses.invalidate();
+      utils.admin.getModulesByCourse.invalidate();
+    },
+    onError: (e) => toast.error(`Error al cargar: ${e.message}`),
   });
 
   const [editing, setEditing] = useState<CourseForm | null>(null);
@@ -42,12 +56,23 @@ export default function AdminCourses() {
             </h1>
             <p className="text-[#8b949e] mt-1">Creá y editá los cursos de CumbreCert.</p>
           </div>
-          <Button
-            onClick={() => setEditing({ ...EMPTY_FORM })}
-            className="bg-[#1B5E20] hover:bg-[#2E7D32] text-white gap-2"
-          >
-            <Plus className="w-4 h-4" /> Nuevo Curso
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => seedMutation.mutate()}
+              disabled={seedMutation.isPending}
+              variant="outline"
+              className="border-[#8BC34A] text-[#8BC34A] hover:bg-[#8BC34A]/10 gap-2 bg-transparent"
+            >
+              {seedMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+              Cargar Contenido Nivel 0
+            </Button>
+            <Button
+              onClick={() => setEditing({ ...EMPTY_FORM })}
+              className="bg-[#1B5E20] hover:bg-[#2E7D32] text-white gap-2"
+            >
+              <Plus className="w-4 h-4" /> Nuevo Curso
+            </Button>
+          </div>
         </div>
 
         {/* Form */}
@@ -125,7 +150,7 @@ export default function AdminCourses() {
           <div className="text-center py-16 text-[#8b949e]">
             <BookOpen className="w-12 h-12 mx-auto mb-3 opacity-30" />
             <p>No hay cursos creados todavía.</p>
-            <p className="text-sm mt-1">Hacé clic en "Nuevo Curso" para empezar.</p>
+            <p className="text-sm mt-1">Usá "Cargar Contenido Nivel 0" para importar el curso inicial, o hacé clic en "Nuevo Curso".</p>
           </div>
         ) : (
           <div className="bg-[#161b22] border border-[#30363d] rounded-xl overflow-hidden">
@@ -155,12 +180,29 @@ export default function AdminCourses() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <button
-                        onClick={() => setEditing({ id: course.id, nivel: course.nivel, titulo: course.titulo, descripcion: course.descripcion ?? "", precio: course.precio, activo: course.activo })}
-                        className="text-[#8b949e] hover:text-[#8BC34A] transition p-1 rounded"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
+                      <div className="flex items-center justify-end gap-1">
+                        <button
+                          onClick={() => navigate(`/admin/modulos?courseId=${course.id}`)}
+                          title="Ver módulos"
+                          className="text-[#8b949e] hover:text-blue-400 transition p-1 rounded"
+                        >
+                          <FileText className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => navigate(`/admin/preguntas?courseId=${course.id}`)}
+                          title="Ver preguntas"
+                          className="text-[#8b949e] hover:text-yellow-400 transition p-1 rounded"
+                        >
+                          <HelpCircle className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => setEditing({ id: course.id, nivel: course.nivel, titulo: course.titulo, descripcion: course.descripcion ?? "", precio: course.precio, activo: course.activo })}
+                          title="Editar curso"
+                          className="text-[#8b949e] hover:text-[#8BC34A] transition p-1 rounded"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -172,3 +214,4 @@ export default function AdminCourses() {
     </AdminLayout>
   );
 }
+

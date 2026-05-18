@@ -1,6 +1,7 @@
 import AdminLayout from "@/components/AdminLayout";
 import { trpc } from "@/lib/trpc";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useSearch } from "wouter";
 import { toast } from "sonner";
 import { Plus, Edit2, Trash2, Check, X, FileText, Upload, ExternalLink, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -30,8 +31,19 @@ const EMPTY_FORM = (courseId: number): ModuleForm => ({
 
 export default function AdminModules() {
   const utils = trpc.useUtils();
+  const search = useSearch();
   const { data: courses } = trpc.admin.getCourses.useQuery();
-  const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
+  const [selectedCourseId, setSelectedCourseId] = useState<number | null>(() => {
+    const params = new URLSearchParams(search);
+    const id = params.get("courseId");
+    return id ? Number(id) : null;
+  });
+
+  useEffect(() => {
+    const params = new URLSearchParams(search);
+    const id = params.get("courseId");
+    if (id) setSelectedCourseId(Number(id));
+  }, [search]);
   const { data: modulesList, isLoading } = trpc.admin.getModulesByCourse.useQuery(
     { courseId: selectedCourseId! },
     { enabled: !!selectedCourseId }

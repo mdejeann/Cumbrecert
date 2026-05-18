@@ -66,34 +66,124 @@ El sitio implementa una estética **minimalista y geométrica** inspirada en car
 
 ### Requisitos Previos
 
-- **Node.js** 18+ (recomendado 20 LTS)
-- **pnpm** 10+ (gestor de paquetes)
-- **Git** (para control de versiones)
+- **Node.js** 22+ via [nvm](https://github.com/nvm-sh/nvm)
+- **pnpm** 10+
+- **Docker** (para la base de datos MySQL)
 
-### Instalación
+### Primera vez — instalación completa
 
-1. **Descargar y extraer el proyecto:**
-   ```bash
-   cd cumbrecert
-   ```
+#### 1. Instalar nvm + Node.js
 
-2. **Instalar dependencias:**
-   ```bash
-   pnpm install
-   ```
+```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+source ~/.bashrc   # o ~/.zshrc si usás zsh
+nvm install 22
+nvm use 22
+nvm alias default 22
+```
 
-3. **Iniciar el servidor de desarrollo:**
-   ```bash
-   pnpm dev
-   ```
+#### 2. Instalar pnpm
 
-   El sitio estará disponible en `http://localhost:5173` (Vite)
+```bash
+npm install -g pnpm
+```
+
+#### 3. Instalar dependencias
+
+```bash
+pnpm install
+pnpm approve-builds   # aprueba compilación de binarios nativos (esbuild, tailwind)
+```
+
+#### 4. Instalar Docker y crear la base de datos MySQL
+
+```bash
+sudo apt install -y docker.io
+sudo usermod -aG docker $USER
+newgrp docker
+```
+
+Iniciar el contenedor MySQL:
+
+```bash
+docker run --name cumbrecert-mysql \
+  -e MYSQL_ROOT_PASSWORD=cumbrecert \
+  -e MYSQL_DATABASE=cumbrecert \
+  -e MYSQL_USER=cumbrecert \
+  -e MYSQL_PASSWORD=cumbrecert \
+  -p 3306:3306 -d mysql:8.0
+```
+
+#### 5. Crear el archivo `.env`
+
+Crear el archivo `/home/matias/Documents/GitHub/Cumbrecert/.env` con:
+
+```env
+DATABASE_URL=mysql://cumbrecert:cumbrecert@localhost:3306/cumbrecert
+JWT_SECRET=cumbrecert_local_secret_key_2026
+NODE_ENV=development
+OAUTH_SERVER_URL=
+OWNER_OPEN_ID=
+VITE_APP_ID=cumbrecert
+```
+
+#### 6. Correr migraciones
+
+```bash
+export NVM_DIR="$HOME/.nvm" && \. "$NVM_DIR/nvm.sh"
+pnpm db:push
+```
+
+> Si falla, las migraciones se pueden aplicar directamente con:
+> ```bash
+> newgrp docker
+> docker exec -i cumbrecert-mysql mysql -ucumbrecert -pcumbrecert cumbrecert < drizzle/0000_cold_lionheart.sql
+> # ... repetir para cada archivo .sql en drizzle/
+> ```
+
+---
+
+### Iniciar el proyecto (uso diario)
+
+#### 1. Asegurarse de que el contenedor MySQL esté corriendo
+
+```bash
+newgrp docker && docker start cumbrecert-mysql
+```
+
+#### 2. Iniciar el servidor de desarrollo
+
+```bash
+export NVM_DIR="$HOME/.nvm" && \. "$NVM_DIR/nvm.sh"
+pnpm dev
+```
+
+El servidor corre en **http://localhost:3000** (o el siguiente puerto disponible).
+
+---
+
+### Primer usuario admin
+
+Después de registrarte, otorgá el rol admin desde la base de datos:
+
+```bash
+newgrp docker && docker exec cumbrecert-mysql \
+  mysql -ucumbrecert -pcumbrecert cumbrecert \
+  -e "UPDATE users SET role='admin' WHERE email='tu@email.com';"
+```
+
+Luego accedé a **http://localhost:3000/admin/cursos** y hacé clic en **"Cargar Contenido Nivel 0"** para cargar el curso de prueba.
+
+---
 
 ### Scripts Disponibles
 
 ```bash
 # Desarrollo
-pnpm dev          # Inicia el servidor de desarrollo con HMR
+pnpm dev          # Inicia el servidor de desarrollo (Express + Vite HMR)
+
+# Base de datos
+pnpm db:push      # Genera y aplica migraciones
 
 # Build
 pnpm build        # Compila el proyecto para producción

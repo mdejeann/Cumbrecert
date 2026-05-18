@@ -1,6 +1,7 @@
 import AdminLayout from "@/components/AdminLayout";
 import { trpc } from "@/lib/trpc";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearch } from "wouter";
 import { toast } from "sonner";
 import { Plus, Edit2, Trash2, Check, X, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -40,9 +41,20 @@ const OPTION_LABELS = { a: "A", b: "B", c: "C", d: "D" };
 
 export default function AdminQuestions() {
   const utils = trpc.useUtils();
+  const search = useSearch();
   const { data: courses } = trpc.admin.getCourses.useQuery();
-  const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
+  const [selectedCourseId, setSelectedCourseId] = useState<number | null>(() => {
+    const params = new URLSearchParams(search);
+    const id = params.get("courseId");
+    return id ? Number(id) : null;
+  });
   const [selectedModuleId, setSelectedModuleId] = useState<number | null | "final">(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(search);
+    const id = params.get("courseId");
+    if (id) setSelectedCourseId(Number(id));
+  }, [search]);
 
   const { data: modules } = trpc.admin.getModulesByCourse.useQuery(
     { courseId: selectedCourseId! },

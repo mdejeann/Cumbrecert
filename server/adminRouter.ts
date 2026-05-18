@@ -4,6 +4,7 @@ import { protectedProcedure, router } from "./_core/trpc";
 import * as db from "./db";
 import { storagePut } from "./storage";
 import { nanoid } from "nanoid";
+import { NIVEL0_COURSE, NIVEL0_MODULES, NIVEL0_MODULE_QUESTIONS, NIVEL0_FINAL_QUESTIONS } from "./_data/nivel0";
 
 // Admin-only middleware
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -148,6 +149,58 @@ export const adminRouter = router({
     .mutation(async ({ input }) => {
       await db.deleteQuestion(input.id);
       return { success: true };
+    }),
+
+  // ── Seed Nivel 0 content ──────────────────────────────────────
+  seedNivel0: adminProcedure
+    .mutation(async () => {
+      // 1. Upsert course
+      await db.upsertCourse(NIVEL0_COURSE);
+      const course = await db.getCourseByNivel(0);
+      if (!course) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "No se pudo crear el curso." });
+
+      // 2. Check if already seeded
+      const existingModules = await db.getModulesByCourse(course.id);
+      if (existingModules.length > 0) {
+        return { success: true, message: "El contenido ya estaba cargado.", skipped: true };
+      }
+
+      // 3. Insert modules
+      for (const mod of NIVEL0_MODULES) {
+        await db.upsertModule({ courseId: course.id, activo: 1, ...mod });
+      }
+
+      // 4. Fetch inserted modules to get their DB ids
+      const dbModules = await db.getModulesByCourse(course.id);
+      const moduleMap = Object.fromEntries(dbModules.map((m) => [m.numero, m.id]));
+
+      // 5. Insert per-module questions
+      for (const { moduleNumero, questions } of NIVEL0_MODULE_QUESTIONS) {
+        const moduleId = moduleMap[moduleNumero];
+        if (!moduleId) continue;
+        for (const q of questions) {
+          await db.upsertQuestion({
+            courseId: course.id,
+            moduleId,
+            examType: "module",
+            ...q,
+            activo: 1,
+          });
+        }
+      }
+
+      // 6. Insert final exam questions
+      for (const q of NIVEL0_FINAL_QUESTIONS) {
+        await db.upsertQuestion({
+          courseId: course.id,
+          moduleId: undefined,
+          examType: "final",
+          ...q,
+          activo: 1,
+        });
+      }
+
+      return { success: true, message: "Contenido del Nivel 0 cargado exitosamente.", skipped: false };
     }),
 
   // ── Certificates ─────────────────────────────────────────────

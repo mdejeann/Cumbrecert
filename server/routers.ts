@@ -11,7 +11,14 @@ import { sdk } from "./_core/sdk";
 import { adminRouter } from "./adminRouter";
 
 // ============================================================
+// APP ROUTER — helpers
+// ============================================================
+const ANSWER_INDEX = { a: 0, b: 1, c: 2, d: 3 } as const;
+
+// ============================================================
 // COURSE CONTENT DATA (Nivel 0 — 5 modules + final exam)
+// Kept for reference only — actual data is served from the DB.
+// Use admin panel → "Cargar Contenido Nivel 0" to seed the DB.
 // ============================================================
 const NIVEL0_MODULES = [
   {
@@ -181,62 +188,97 @@ export const appRouter = router({
     getModules: protectedProcedure
       .input(z.object({ level: z.number() }))
       .query(async ({ input, ctx }) => {
-        if (input.level !== 0) throw new TRPCError({ code: "NOT_FOUND", message: "Nivel no disponible aún." });
-        const progress = await db.getModuleProgress(ctx.user.id, 0);
+        const course = await db.getCourseByNivel(input.level);
+        if (!course) throw new TRPCError({ code: "NOT_FOUND", message: "Nivel no disponible aún." });
+        const dbModules = await db.getModulesByCourse(course.id);
+        const progress = await db.getModuleProgress(ctx.user.id, input.level);
         const progressMap = Object.fromEntries(progress.map((p) => [p.moduleNumber, p]));
-        return NIVEL0_MODULES.map((m) => ({ ...m, progress: progressMap[m.id] ?? null }));
+        return dbModules
+          .filter((m) => m.activo)
+          .map((m) => ({
+            id: m.numero,
+            title: m.titulo,
+            subtitle: m.descripcion ?? "",
+            duration: "",
+            content: m.contenidoMarkdown ?? "",
+            progress: progressMap[m.numero] ?? null,
+          }));
       }),
 
     getModule: protectedProcedure
       .input(z.object({ level: z.number(), moduleNumber: z.number() }))
       .query(async ({ input, ctx }) => {
-        if (input.level !== 0) throw new TRPCError({ code: "NOT_FOUND" });
-        const mod = NIVEL0_MODULES.find((m) => m.id === input.moduleNumber);
+        const course = await db.getCourseByNivel(input.level);
+        if (!course) throw new TRPCError({ code: "NOT_FOUND" });
+        const dbModules = await db.getModulesByCourse(course.id);
+        const mod = dbModules.find((m) => m.numero === input.moduleNumber);
         if (!mod) throw new TRPCError({ code: "NOT_FOUND" });
         if (input.moduleNumber > 1) {
-          const prev = await db.getModuleProgressEntry(ctx.user.id, 0, input.moduleNumber - 1);
+          const prev = await db.getModuleProgressEntry(ctx.user.id, input.level, input.moduleNumber - 1);
           if (!prev || !prev.passed) throw new TRPCError({ code: "FORBIDDEN", message: "Debés aprobar el módulo anterior primero." });
         }
-        const progress = await db.getModuleProgressEntry(ctx.user.id, 0, input.moduleNumber);
-        return { ...mod, progress };
+        const progress = await db.getModuleProgressEntry(ctx.user.id, input.level, input.moduleNumber);
+        return {
+          id: mod.numero,
+          title: mod.titulo,
+          subtitle: mod.descripcion ?? "",
+          duration: "",
+          content: mod.contenidoMarkdown ?? "",
+          progress,
+        };
       }),
 
     getExamQuestions: protectedProcedure
       .input(z.object({ level: z.number(), moduleNumber: z.number() }))
       .query(async ({ input, ctx }) => {
-        if (input.level !== 0) throw new TRPCError({ code: "NOT_FOUND" });
+        const course = await db.getCourseByNivel(input.level);
+        if (!course) throw new TRPCError({ code: "NOT_FOUND" });
         if (input.moduleNumber === 6) {
+          // Final exam — check all 5 modules passed
           for (let i = 1; i <= 5; i++) {
-            const p = await db.getModuleProgressEntry(ctx.user.id, 0, i);
+            const p = await db.getModuleProgressEntry(ctx.user.id, input.level, i);
             if (!p || !p.passed) throw new TRPCError({ code: "FORBIDDEN", message: `Debés aprobar el Módulo ${i} primero.` });
           }
-          return FINAL_EXAM_QUESTIONS.map((q) => ({ question: q.question, options: q.options }));
+          const qs = await db.getQuestionsByCourse(course.id, "final");
+          return qs
+            .filter((q) => q.activo)
+            .map((q) => ({ question: q.pregunta, options: [q.opcionA, q.opcionB, q.opcionC, q.opcionD] }));
         }
         if (input.moduleNumber > 1) {
-          const prev = await db.getModuleProgressEntry(ctx.user.id, 0, input.moduleNumber - 1);
+          const prev = await db.getModuleProgressEntry(ctx.user.id, input.level, input.moduleNumber - 1);
           if (!prev || !prev.passed) throw new TRPCError({ code: "FORBIDDEN", message: "Debés aprobar el módulo anterior primero." });
         }
-        const questions = NIVEL0_EXAMS[input.moduleNumber];
-        if (!questions) throw new TRPCError({ code: "NOT_FOUND" });
-        return questions.map((q) => ({ question: q.question, options: q.options }));
+        const dbModules = await db.getModulesByCourse(course.id);
+        const mod = dbModules.find((m) => m.numero === input.moduleNumber);
+        if (!mod) throw new TRPCError({ code: "NOT_FOUND" });
+        const qs = await db.getQuestionsByModule(mod.id);
+        return qs
+          .filter((q) => q.activo)
+          .map((q) => ({ question: q.pregunta, options: [q.opcionA, q.opcionB, q.opcionC, q.opcionD] }));
       }),
 
     submitExam: protectedProcedure
       .input(z.object({ level: z.number(), moduleNumber: z.number(), answers: z.array(z.number()) }))
       .mutation(async ({ input, ctx }) => {
-        if (input.level !== 0) throw new TRPCError({ code: "NOT_FOUND" });
-        let questions: { question: string; options: string[]; correct: number }[];
+        const course = await db.getCourseByNivel(input.level);
+        if (!course) throw new TRPCError({ code: "NOT_FOUND" });
+
+        let dbQuestions: Awaited<ReturnType<typeof db.getQuestionsByCourse>>;
         if (input.moduleNumber === 6) {
-          questions = FINAL_EXAM_QUESTIONS;
+          dbQuestions = (await db.getQuestionsByCourse(course.id, "final")).filter((q) => q.activo);
         } else {
-          questions = NIVEL0_EXAMS[input.moduleNumber];
-          if (!questions) throw new TRPCError({ code: "NOT_FOUND" });
+          const dbModules = await db.getModulesByCourse(course.id);
+          const mod = dbModules.find((m) => m.numero === input.moduleNumber);
+          if (!mod) throw new TRPCError({ code: "NOT_FOUND" });
+          dbQuestions = (await db.getQuestionsByModule(mod.id)).filter((q) => q.activo);
         }
+
         let correct = 0;
-        for (let i = 0; i < questions.length; i++) {
-          if (input.answers[i] === questions[i].correct) correct++;
+        for (let i = 0; i < dbQuestions.length; i++) {
+          const correctIdx = ANSWER_INDEX[dbQuestions[i].respuestaCorrecta];
+          if (input.answers[i] === correctIdx) correct++;
         }
-        const score = Math.round((correct / questions.length) * 100);
+        const score = Math.round((correct / dbQuestions.length) * 100);
         const passed = score >= 60;
         const existing = await db.getModuleProgressEntry(ctx.user.id, input.level, input.moduleNumber);
         await db.upsertModuleProgress({
@@ -250,19 +292,25 @@ export const appRouter = router({
         });
         let certificate = null;
         if (input.moduleNumber === 6 && passed) {
-          const existingCert = (await db.getCertificatesByUser(ctx.user.id)).find((c) => c.courseLevel === 0);
+          const existingCert = (await db.getCertificatesByUser(ctx.user.id)).find((c) => c.courseLevel === input.level);
           if (!existingCert) {
-            const qrCode = `CC0-${nanoid(12).toUpperCase()}`;
+            const qrCode = `CC${input.level}-${nanoid(12).toUpperCase()}`;
             const expiresAt = new Date();
             expiresAt.setFullYear(expiresAt.getFullYear() + 2);
-            certificate = await db.createCertificate({ userId: ctx.user.id, qrCode, courseLevel: 0, finalScore: score, expiresAt, isValid: 1 });
+            certificate = await db.createCertificate({ userId: ctx.user.id, qrCode, courseLevel: input.level, finalScore: score, expiresAt, isValid: 1 });
             const cp = await db.getCourseProgress(ctx.user.id);
-            await db.upsertCourseProgress({ userId: ctx.user.id, nivel0Completado: 1, nivel1Completado: cp?.nivel1Completado ?? 0, nivel2Completado: cp?.nivel2Completado ?? 0, nivel3Completado: cp?.nivel3Completado ?? 0 });
+            await db.upsertCourseProgress({
+              userId: ctx.user.id,
+              nivel0Completado: input.level === 0 ? 1 : (cp?.nivel0Completado ?? 0),
+              nivel1Completado: input.level === 1 ? 1 : (cp?.nivel1Completado ?? 0),
+              nivel2Completado: input.level === 2 ? 1 : (cp?.nivel2Completado ?? 0),
+              nivel3Completado: input.level === 3 ? 1 : (cp?.nivel3Completado ?? 0),
+            });
           } else {
             certificate = existingCert;
           }
         }
-        return { score, passed, correct, total: questions.length, certificate };
+        return { score, passed, correct, total: dbQuestions.length, certificate };
       }),
 
     getProgress: protectedProcedure.query(async ({ ctx }) => {
