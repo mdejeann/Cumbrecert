@@ -9,6 +9,7 @@ import bcrypt from "bcryptjs";
 import { TRPCError } from "@trpc/server";
 import { sdk } from "./_core/sdk";
 import { adminRouter } from "./adminRouter";
+import { notifyOwner, notifyUser } from "./_core/notification";
 
 // ============================================================
 // APP ROUTER — helpers
@@ -317,6 +318,19 @@ export const appRouter = router({
             const expiresAt = new Date();
             expiresAt.setFullYear(expiresAt.getFullYear() + 2);
             certificate = await db.createCertificate({ userId: ctx.user.id, qrCode, courseLevel: input.level, finalScore: score, expiresAt, isValid: 1 });
+
+            // Notify the user via Manus email
+            const levelName = ["Explorador Iniciante", "Senderista Certificado", "Trekker Avanzado", "Montaña Responsable"][input.level] ?? `Nivel ${input.level}`;
+            await notifyUser(ctx.user.openId, {
+              title: `🏔️ ¡Obtuviste tu certificado CumbreCert — ${levelName}!`,
+              content: `¡Felicitaciones ${ctx.user.nombre ?? ""}!\n\nAprobaste el examen final del nivel "${levelName}" con un puntaje de ${score}%.\n\nTu código QR de certificado es: ${qrCode}\nPodés verificarlo en: ${process.env.APP_URL ?? "https://cumbrecert.manus.app"}/verificar/${qrCode}\n\nEl certificado es válido hasta el ${expiresAt.toLocaleDateString("es-AR")}.\n\n¡Seguí subiendo! 🌿`,
+            }).catch((e) => console.warn("[Notification] notifyUser failed silently:", e));
+
+            // Also notify the owner
+            await notifyOwner({
+              title: `Nuevo certificado emitido — ${levelName}`,
+              content: `Usuario: ${ctx.user.nombre ?? ""} ${(ctx.user as any).apellido ?? ""} (${ctx.user.email ?? ""})\nNivel: ${levelName}\nPuntaje: ${score}%\nQR: ${qrCode}`,
+            }).catch((e) => console.warn("[Notification] notifyOwner failed silently:", e));
           } else {
             certificate = existingCert;
           }

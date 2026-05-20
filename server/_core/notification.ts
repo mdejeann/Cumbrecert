@@ -112,3 +112,52 @@ export async function notifyOwner(
     return false;
   }
 }
+
+/**
+ * Dispatches a notification to a specific user via their Manus openId.
+ * Uses the same Forge API but includes the recipientOpenId in the payload.
+ * Returns `true` if accepted, `false` on upstream errors (non-throwing).
+ */
+export async function notifyUser(
+  recipientOpenId: string,
+  payload: NotificationPayload
+): Promise<boolean> {
+  const { title, content } = validatePayload(payload);
+
+  if (!ENV.forgeApiUrl || !ENV.forgeApiKey) {
+    console.warn("[Notification] notifyUser: service not configured, skipping.");
+    return false;
+  }
+
+  const normalizedBase = ENV.forgeApiUrl.endsWith("/") ? ENV.forgeApiUrl : `${ENV.forgeApiUrl}/`;
+  const endpoint = new URL(
+    "webdevtoken.v1.WebDevService/SendNotificationToUser",
+    normalizedBase
+  ).toString();
+
+  try {
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        accept: "application/json",
+        authorization: `Bearer ${ENV.forgeApiKey}`,
+        "content-type": "application/json",
+        "connect-protocol-version": "1",
+      },
+      body: JSON.stringify({ title, content, recipientOpenId }),
+    });
+
+    if (!response.ok) {
+      const detail = await response.text().catch(() => "");
+      console.warn(
+        `[Notification] Failed to notify user ${recipientOpenId} (${response.status})${detail ? `: ${detail}` : ""}`
+      );
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.warn("[Notification] Error calling notifyUser:", error);
+    return false;
+  }
+}
