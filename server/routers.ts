@@ -191,8 +191,8 @@ export const appRouter = router({
         const course = await db.getCourseByNivel(input.level);
         if (!course) throw new TRPCError({ code: "NOT_FOUND", message: "Nivel no disponible aún." });
         const dbModules = await db.getModulesByCourse(course.id);
-        const progress = await db.getModuleProgress(ctx.user.id, input.level);
-        const progressMap = Object.fromEntries(progress.map((p) => [p.moduleNumber, p]));
+        const progress = await db.getModuleProgress(ctx.user.id, course.id);
+        const progressMap = Object.fromEntries(progress.map((p) => [p.moduleId, p]));
         return dbModules
           .filter((m) => m.activo)
           .map((m) => ({
@@ -201,7 +201,7 @@ export const appRouter = router({
             subtitle: m.descripcion ?? "",
             duration: "",
             content: m.contenidoMarkdown ?? "",
-            progress: progressMap[m.numero] ?? null,
+            progress: progressMap[m.id] ?? null,
           }));
       }),
 
@@ -214,10 +214,12 @@ export const appRouter = router({
         const mod = dbModules.find((m) => m.numero === input.moduleNumber);
         if (!mod) throw new TRPCError({ code: "NOT_FOUND" });
         if (input.moduleNumber > 1) {
-          const prev = await db.getModuleProgressEntry(ctx.user.id, input.level, input.moduleNumber - 1);
-          if (!prev || !prev.passed) throw new TRPCError({ code: "FORBIDDEN", message: "Debés aprobar el módulo anterior primero." });
+          const prevMod = dbModules.find((m) => m.numero === input.moduleNumber - 1);
+          if (!prevMod) throw new TRPCError({ code: "NOT_FOUND" });
+          const prev = await db.getModuleProgressEntry(ctx.user.id, prevMod.id);
+          if (!prev || prev.estado !== "aprobado") throw new TRPCError({ code: "FORBIDDEN", message: "Debés aprobar el módulo anterior primero." });
         }
-        const progress = await db.getModuleProgressEntry(ctx.user.id, input.level, input.moduleNumber);
+        const progress = await db.getModuleProgressEntry(ctx.user.id, mod.id);
         return {
           id: mod.numero,
           title: mod.titulo,
@@ -233,11 +235,12 @@ export const appRouter = router({
       .query(async ({ input, ctx }) => {
         const course = await db.getCourseByNivel(input.level);
         if (!course) throw new TRPCError({ code: "NOT_FOUND" });
+        const dbModules = await db.getModulesByCourse(course.id);
         if (input.moduleNumber === 6) {
-          // Final exam — check all 5 modules passed
-          for (let i = 1; i <= 5; i++) {
-            const p = await db.getModuleProgressEntry(ctx.user.id, input.level, i);
-            if (!p || !p.passed) throw new TRPCError({ code: "FORBIDDEN", message: `Debés aprobar el Módulo ${i} primero.` });
+          // Final exam — check all modules passed
+          for (const m of dbModules) {
+            const p = await db.getModuleProgressEntry(ctx.user.id, m.id);
+            if (!p || p.estado !== "aprobado") throw new TRPCError({ code: "FORBIDDEN", message: `Debés aprobar el Módulo ${m.numero} primero.` });
           }
           const qs = await db.getQuestionsByCourse(course.id, "final");
           return qs
@@ -245,10 +248,11 @@ export const appRouter = router({
             .map((q) => ({ question: q.pregunta, options: [q.opcionA, q.opcionB, q.opcionC, q.opcionD] }));
         }
         if (input.moduleNumber > 1) {
-          const prev = await db.getModuleProgressEntry(ctx.user.id, input.level, input.moduleNumber - 1);
-          if (!prev || !prev.passed) throw new TRPCError({ code: "FORBIDDEN", message: "Debés aprobar el módulo anterior primero." });
+          const prevMod = dbModules.find((m) => m.numero === input.moduleNumber - 1);
+          if (!prevMod) throw new TRPCError({ code: "NOT_FOUND" });
+          const prev = await db.getModuleProgressEntry(ctx.user.id, prevMod.id);
+          if (!prev || prev.estado !== "aprobado") throw new TRPCError({ code: "FORBIDDEN", message: "Debés aprobar el módulo anterior primero." });
         }
-        const dbModules = await db.getModulesByCourse(course.id);
         const mod = dbModules.find((m) => m.numero === input.moduleNumber);
         if (!mod) throw new TRPCError({ code: "NOT_FOUND" });
         const qs = await db.getQuestionsByModule(mod.id);
@@ -263,13 +267,15 @@ export const appRouter = router({
         const course = await db.getCourseByNivel(input.level);
         if (!course) throw new TRPCError({ code: "NOT_FOUND" });
 
+        const dbModules = await db.getModulesByCourse(course.id);
         let dbQuestions: Awaited<ReturnType<typeof db.getQuestionsByCourse>>;
+        let currentModId: number | null = null;
         if (input.moduleNumber === 6) {
           dbQuestions = (await db.getQuestionsByCourse(course.id, "final")).filter((q) => q.activo);
         } else {
-          const dbModules = await db.getModulesByCourse(course.id);
           const mod = dbModules.find((m) => m.numero === input.moduleNumber);
           if (!mod) throw new TRPCError({ code: "NOT_FOUND" });
+          currentModId = mod.id;
           dbQuestions = (await db.getQuestionsByModule(mod.id)).filter((q) => q.activo);
         }
 
@@ -280,16 +286,29 @@ export const appRouter = router({
         }
         const score = Math.round((correct / dbQuestions.length) * 100);
         const passed = score >= 60;
-        const existing = await db.getModuleProgressEntry(ctx.user.id, input.level, input.moduleNumber);
-        await db.upsertModuleProgress({
-          userId: ctx.user.id,
-          courseLevel: input.level,
-          moduleNumber: input.moduleNumber,
-          examScore: score,
-          passed: passed ? 1 : 0,
-          attempts: (existing?.attempts ?? 0) + 1,
-          completedAt: passed ? new Date() : (existing?.completedAt ?? null),
-        });
+
+        if (input.moduleNumber === 6) {
+          // Final exam: update course_progress
+          await db.upsertCourseProgress({
+            userId: ctx.user.id,
+            courseId: course.id,
+            estado: passed ? "completado" : "activo",
+            notaFinal: score,
+            completedAt: passed ? new Date() : null,
+          });
+        } else if (currentModId !== null) {
+          // Module exam: update module_progress
+          const existing = await db.getModuleProgressEntry(ctx.user.id, currentModId);
+          await db.upsertModuleProgress({
+            userId: ctx.user.id,
+            moduleId: currentModId,
+            estado: passed ? "aprobado" : "reprobado",
+            notaExamen: score,
+            intentos: (existing?.intentos ?? 0) + 1,
+            completedAt: passed ? new Date() : (existing?.completedAt ?? null),
+          });
+        }
+
         let certificate = null;
         if (input.moduleNumber === 6 && passed) {
           const existingCert = (await db.getCertificatesByUser(ctx.user.id)).find((c) => c.courseLevel === input.level);
@@ -298,14 +317,6 @@ export const appRouter = router({
             const expiresAt = new Date();
             expiresAt.setFullYear(expiresAt.getFullYear() + 2);
             certificate = await db.createCertificate({ userId: ctx.user.id, qrCode, courseLevel: input.level, finalScore: score, expiresAt, isValid: 1 });
-            const cp = await db.getCourseProgress(ctx.user.id);
-            await db.upsertCourseProgress({
-              userId: ctx.user.id,
-              nivel0Completado: input.level === 0 ? 1 : (cp?.nivel0Completado ?? 0),
-              nivel1Completado: input.level === 1 ? 1 : (cp?.nivel1Completado ?? 0),
-              nivel2Completado: input.level === 2 ? 1 : (cp?.nivel2Completado ?? 0),
-              nivel3Completado: input.level === 3 ? 1 : (cp?.nivel3Completado ?? 0),
-            });
           } else {
             certificate = existingCert;
           }
@@ -313,12 +324,20 @@ export const appRouter = router({
         return { score, passed, correct, total: dbQuestions.length, certificate };
       }),
 
-    getProgress: protectedProcedure.query(async ({ ctx }) => {
-      const courseProgressData = await db.ensureCourseProgress(ctx.user.id);
-      const moduleProgressData = await db.getModuleProgress(ctx.user.id, 0);
-      const certificates = await db.getCertificatesByUser(ctx.user.id);
-      return { courseProgress: courseProgressData, moduleProgress: moduleProgressData, certificates };
-    }),
+    getProgress: protectedProcedure
+      .input(z.object({ level: z.number() }).optional())
+      .query(async ({ input, ctx }) => {
+        const level = input?.level ?? 0;
+        const course = await db.getCourseByNivel(level);
+        const courseProgressData = course
+          ? await db.getCourseProgressEntry(ctx.user.id, course.id)
+          : null;
+        const moduleProgressData = course
+          ? await db.getModuleProgress(ctx.user.id, course.id)
+          : [];
+        const certs = await db.getCertificatesByUser(ctx.user.id);
+        return { courseProgress: courseProgressData, moduleProgress: moduleProgressData, certificates: certs };
+      }),
   }),
 
   admin: adminRouter,

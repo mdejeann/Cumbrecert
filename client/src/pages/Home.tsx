@@ -263,7 +263,7 @@ export default function Home() {
       <section className="bg-white py-16 md:py-24">
         <div className="container max-w-4xl">
           <h2 className="text-4xl md:text-5xl font-bold text-center mb-4 text-[#1B5E20]">
-            La montaña argentina no tiene reglas claras.
+            Las montañas argentinas no tienen reglas claras.
           </h2>
           <p className="text-center text-lg text-[#666] mb-12">
             Hasta ahora.
@@ -543,7 +543,8 @@ export default function Home() {
           </h2>
 
           <p className="text-lg mb-8 leading-relaxed">
-            CumbreCert nació de un acuerdo con el Centro Cultural Argentino de Montaña (CCAM) y la Asociación Argentina de Guías de Montaña (AAGM).
+            CumbreCert nació de un acuerdo con el Centro Cultural Argentino de Montaña (CCAM) y y abierto a que otras instituciones o formadores  lo respalde
+            para que el certificado tenga el reconocimiento que merece. No es un papel más: es la credencial digital que demuestra tu conocimiento y compromiso con la montaña.
           </p>
 
           <p className="text-lg mb-12 leading-relaxed">

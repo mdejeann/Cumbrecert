@@ -47,14 +47,15 @@ export default function Dashboard() {
     return null;
   }
 
-  const moduleProgressMap = Object.fromEntries(
-    (progress?.moduleProgress ?? []).map((p) => [p.moduleNumber, p])
+  // moduleProgress entries are joined with modules.numero via the server
+  const moduleProgressByNum = Object.fromEntries(
+    (progress?.moduleProgress ?? []).map((p) => [(p as any).moduleNumero ?? p.moduleId, p])
   );
-  const completedModules = (progress?.moduleProgress ?? []).filter((p) => p.passed).length;
+  const completedModules = (progress?.moduleProgress ?? []).filter((p) => p.estado === "aprobado").length;
   const totalModules = 5;
   const progressPercent = Math.round((completedModules / totalModules) * 100);
   const hasCertificate = (progress?.certificates ?? []).some((c) => c.courseLevel === 0);
-  const nivel0Completado = progress?.courseProgress?.nivel0Completado === 1;
+  const nivel0Completado = progress?.courseProgress?.estado === "completado";
 
   return (
     <div className="min-h-screen bg-[#F8FAF5]">
@@ -166,16 +167,16 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent className="p-0">
               {[
-                { num: 1, title: "¿Por qué caminamos en la montaña?", subtitle: "Historia, cultura y ética", duration: "20 min" },
-                { num: 2, title: "¿Qué llevar? Equipamiento esencial", subtitle: "Mochila, calzado, hidratación", duration: "25 min" },
-                { num: 3, title: "Clima y meteorología de montaña", subtitle: "Cómo leer el tiempo", duration: "20 min" },
-                { num: 4, title: "Orientación y señalización", subtitle: "Cómo no perderse", duration: "25 min" },
-                { num: 5, title: "Conducta en la montaña y Leave No Trace", subtitle: "Cuidar el entorno", duration: "20 min" },
+                { num: 1, title: "Módulo 1: ¿Por qué caminamos en la montaña?", subtitle: "Historia, cultura y ética", duration: "20 min" },
+                { num: 2, title: "Módulo 2: ¿Qué llevar? Equipamiento esencial", subtitle: "Mochila, calzado, hidratación", duration: "25 min" },
+                { num: 3, title: "Módulo 3: Clima y meteorología de montaña", subtitle: "Cómo leer el tiempo", duration: "20 min" },
+                { num: 4, title: "Módulo 4: Orientación y señalización", subtitle: "Cómo no perderse", duration: "25 min" },
+                { num: 5, title: "Módulo 5: Conducta en la montaña y Leave No Trace", subtitle: "Cuidar el entorno", duration: "20 min" },
               ].map((mod, idx) => {
-                const mp = moduleProgressMap[mod.num];
-                const passed = mp?.passed === 1;
-                const attempted = (mp?.attempts ?? 0) > 0;
-                const prevPassed = mod.num === 1 || moduleProgressMap[mod.num - 1]?.passed === 1;
+                const mp = moduleProgressByNum[mod.num];
+                const passed = mp?.estado === "aprobado";
+                const attempted = (mp?.intentos ?? 0) > 0;
+                const prevPassed = mod.num === 1 || moduleProgressByNum[mod.num - 1]?.estado === "aprobado";
                 const isLocked = !prevPassed;
 
                 return (
@@ -213,7 +214,7 @@ export default function Dashboard() {
                       </div>
                       {passed && (
                         <Badge className="bg-[#E8F5E9] text-[#1B5E20] text-xs border border-[#C8E6C9]">
-                          {mp?.examScore}%
+                          {mp?.notaExamen}%
                         </Badge>
                       )}
                       {attempted && !passed && (
@@ -229,9 +230,9 @@ export default function Dashboard() {
 
               {/* Final Exam Row */}
               {(() => {
-                const allPassed = [1, 2, 3, 4, 5].every((n) => moduleProgressMap[n]?.passed === 1);
-                const finalPassed = moduleProgressMap[6]?.passed === 1;
-                const finalAttempted = (moduleProgressMap[6]?.attempts ?? 0) > 0;
+                const allPassed = [1, 2, 3, 4, 5].every((n) => moduleProgressByNum[n]?.estado === "aprobado");
+                const finalPassed = progress?.courseProgress?.estado === "completado";
+                const finalAttempted = false;
 
                 return (
                   <div
