@@ -39,24 +39,33 @@
 
 ## Phase 7 — Testing & Deploy
 - [x] Vitest tests — 20/20 passing (auth, courses, exams, certificates)
-- [ ] Save checkpoint
-- [ ] Push to GitHub
+- [x] Save checkpoint
+- [x] Push to GitHub
+
+## Admin Panel
+- [x] Extend DB schema: courses, modules, exam_questions tables
+- [x] Run DB migrations
+- [x] Admin tRPC routers: courses CRUD, modules CRUD, questions CRUD, PDF upload, DB viewer
+- [x] Admin layout with sidebar navigation
+- [x] Admin page: Courses list + create/edit course
+- [x] Admin page: Module editor (content markdown + PDF upload)
+- [x] Admin page: Question editor (multiple choice per module + final exam)
+- [x] Admin page: DB Viewer (browse tables, run queries)
+- [x] Admin page: Users list
+- [x] Protect /admin routes with admin role check
+- [x] Wire all admin routes in App.tsx
+- [x] Tests for admin procedures
+- [x] Checkpoint + push to GitHub
 
 ## Fixes
 - [x] Remove "¿Dónde salís a la montaña?" (region) field from Register form
 - [x] Fix DB error on register: `is_active` column dropped + new columns added to DB
 
-## Admin Panel
-- [ ] Extend DB schema: courses, modules, exam_questions tables
-- [ ] Run DB migrations
-- [ ] Admin tRPC routers: courses CRUD, modules CRUD, questions CRUD, PDF upload, DB viewer
-- [ ] Admin layout with sidebar navigation
-- [ ] Admin page: Courses list + create/edit course
-- [ ] Admin page: Module editor (content markdown + PDF upload)
-- [ ] Admin page: Question editor (multiple choice per module + final exam)
-- [ ] Admin page: DB Viewer (browse tables, run queries)
-- [ ] Admin page: Users list
-- [ ] Protect /admin routes with admin role check
-- [ ] Wire all admin routes in App.tsx
-- [ ] Tests for admin procedures
-- [ ] Checkpoint + push to GitHub
+## User Features
+- [x] Dashboard: Show available courses with prices and enroll buttons
+- [x] Mostrar "Curso Teórico de Senderista" como curso Nivel 1 en el dashboard para cualquier usuario autenticado
+- [x] Mostrar "Explorador Iniciante" y "Curso Teórico de Senderista" en Otros cursos disponibles con títulos y acciones correctas
+- [x] Permitir inscripción al curso Nivel 1 y mostrarlo como curso elegido después de inscribirse
+- [ ] Verificar pruebas, guardar checkpoint y hacer commit de los cambios en GitHub
+- [ ] Guardar un nuevo checkpoint con los cambios del dashboard y Nivel 1
+- [ ] Hacer commit y push a GitHub de los cambios verificados

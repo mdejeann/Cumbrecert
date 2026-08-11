@@ -122,22 +122,10 @@ export async function updateUserRole(userId: number, role: "user" | "admin") {
 // COURSE PROGRESS HELPERS
 // ============================================================
 
-/** All progress rows for a given user (across all courses). */
-export async function getCourseProgressByUser(userId: number) {
-  const db = await getDb();
-  if (!db) return [];
-  return await db.select().from(courseProgress).where(eq(courseProgress.userId, userId));
-}
-
-/** Single progress row for a user+course pair. */
-export async function getCourseProgressEntry(userId: number, courseId: number) {
+export async function getCourseProgress(userId: number) {
   const db = await getDb();
   if (!db) return null;
-  const result = await db
-    .select()
-    .from(courseProgress)
-    .where(and(eq(courseProgress.userId, userId), eq(courseProgress.courseId, courseId)))
-    .limit(1);
+  const result = await db.select().from(courseProgress).where(eq(courseProgress.userId, userId)).limit(1);
   return result.length > 0 ? result[0] : null;
 }
 
@@ -146,19 +134,19 @@ export async function upsertCourseProgress(data: InsertCourseProgress) {
   if (!db) return;
   await db.insert(courseProgress).values(data).onDuplicateKeyUpdate({
     set: {
-      estado: data.estado,
-      notaFinal: data.notaFinal,
-      completedAt: data.completedAt,
+      nivel0Completado: data.nivel0Completado,
+      nivel1Completado: data.nivel1Completado,
+      nivel2Completado: data.nivel2Completado,
+            nivel3Completado: data.nivel3Completado,
+      nivel4Completado: data.nivel4Completado,
     },
   });
 }
-
-/** Creates a progress row if it doesn't exist yet, then returns it. */
-export async function ensureCourseProgress(userId: number, courseId: number) {
-  const existing = await getCourseProgressEntry(userId, courseId);
+export async function ensureCourseProgress(userId: number) {
+  const existing = await getCourseProgress(userId);
   if (!existing) {
-    await upsertCourseProgress({ userId, courseId, estado: "activo" });
-    return await getCourseProgressEntry(userId, courseId);
+    await upsertCourseProgress({ userId, nivel0Completado: 0, nivel1Completado: 0, nivel2Completado: 0, nivel3Completado: 0, nivel4Completado: 0 });
+    return await getCourseProgress(userId);
   }
   return existing;
 }
@@ -167,41 +155,25 @@ export async function ensureCourseProgress(userId: number, courseId: number) {
 // MODULE PROGRESS HELPERS
 // ============================================================
 
-/**
- * Progress rows for a user, optionally scoped to a courseId.
- * When courseId is provided, joins with modules to filter.
- */
-export async function getModuleProgress(userId: number, courseId?: number) {
+export async function getModuleProgress(userId: number, courseLevel?: number) {
   const db = await getDb();
   if (!db) return [];
-  if (courseId !== undefined) {
-    return await db
-      .select({
-        id: moduleProgress.id,
-        userId: moduleProgress.userId,
-        moduleId: moduleProgress.moduleId,
-        estado: moduleProgress.estado,
-        notaExamen: moduleProgress.notaExamen,
-        intentos: moduleProgress.intentos,
-        completedAt: moduleProgress.completedAt,
-        moduleNumero: modules.numero,
-      })
-      .from(moduleProgress)
-      .innerJoin(modules, eq(moduleProgress.moduleId, modules.id))
-      .where(and(eq(moduleProgress.userId, userId), eq(modules.courseId, courseId)));
-  }
-  return await db.select().from(moduleProgress).where(eq(moduleProgress.userId, userId));
+  const conditions = courseLevel !== undefined
+    ? and(eq(moduleProgress.userId, userId), eq(moduleProgress.courseLevel, courseLevel))
+    : eq(moduleProgress.userId, userId);
+  return await db.select().from(moduleProgress).where(conditions);
 }
 
-/** Single progress row for a user+module pair. */
-export async function getModuleProgressEntry(userId: number, moduleId: number) {
+export async function getModuleProgressEntry(userId: number, courseLevel: number, moduleNumber: number) {
   const db = await getDb();
   if (!db) return null;
-  const result = await db
-    .select()
-    .from(moduleProgress)
-    .where(and(eq(moduleProgress.userId, userId), eq(moduleProgress.moduleId, moduleId)))
-    .limit(1);
+  const result = await db.select().from(moduleProgress).where(
+    and(
+      eq(moduleProgress.userId, userId),
+      eq(moduleProgress.courseLevel, courseLevel),
+      eq(moduleProgress.moduleNumber, moduleNumber)
+    )
+  ).limit(1);
   return result.length > 0 ? result[0] : null;
 }
 
@@ -210,9 +182,9 @@ export async function upsertModuleProgress(data: InsertModuleProgress) {
   if (!db) return;
   await db.insert(moduleProgress).values(data).onDuplicateKeyUpdate({
     set: {
-      estado: data.estado,
-      notaExamen: data.notaExamen,
-      intentos: data.intentos,
+      examScore: data.examScore,
+      passed: data.passed,
+      attempts: data.attempts,
       completedAt: data.completedAt,
     },
   });
@@ -391,4 +363,11 @@ export async function getTableStats() {
     })
   );
   return stats;
+}
+
+export async function getCourseById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(courses).where(eq(courses.id, id)).limit(1);
+  return result.length > 0 ? result[0] : null;
 }

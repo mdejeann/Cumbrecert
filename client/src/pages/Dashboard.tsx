@@ -1,3 +1,4 @@
+import React from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
@@ -11,9 +12,98 @@ import {
 import { Link, useLocation } from "wouter";
 import { toast } from "sonner";
 
-const LEVEL_NAMES = ["Explorador Iniciante", "Senderista Certificado", "Trekker Avanzado", "Montaña Responsable"];
-const LEVEL_PRICES = ["GRATIS", "USD 20", "USD 50", "USD 100"];
-const LEVEL_COLORS = ["#8BC34A", "#2196F3", "#FF9800", "#9C27B0"];
+const LEVEL_NAMES = ["Explorador Iniciante", "Senderista Certificado", "Trekker Avanzado", "Montaña Responsable", "Curso Teórico de Senderista"];
+const LEVEL_PRICES = ["GRATIS", "USD 20", "USD 50", "USD 100", "USD 30"];
+const LEVEL_COLORS = ["#8BC34A", "#2196F3", "#FF9800", "#9C27B0", "#FF5722"];
+
+function OtherCoursesSection({ user: _user }: { user: any }) {
+  const [, navigate] = useLocation();
+  const { data: allCourses, isLoading: coursesLoading } = trpc.courses.getAllCourses.useQuery();
+  const enrollMutation = trpc.courses.enrollCourse.useMutation();
+  const [enrollingId, setEnrollingId] = React.useState<number | null>(null);
+
+  const handleEnroll = async (courseId: number) => {
+    setEnrollingId(courseId);
+    try {
+      await enrollMutation.mutateAsync({ courseId });
+      toast.success("¡Curso elegido! Ya podés comenzar los módulos.");
+      window.location.reload();
+    } catch (error: any) {
+      toast.error(error?.message || "Error al inscribirse");
+    } finally {
+      setEnrollingId(null);
+    }
+  };
+
+  if (coursesLoading) {
+    return (
+      <div>
+        <h2 className="text-xl font-bold text-[#1B5E20] mb-4">Otros cursos disponibles</h2>
+        <div className="text-center py-8 text-gray-400">Cargando cursos...</div>
+      </div>
+    );
+  }
+
+  const courses = (allCourses || []).filter((course: any) => course.activo === 1);
+
+  if (courses.length === 0) {
+    return null;
+  }
+
+  return (
+    <div>
+      <h2 className="text-xl font-bold text-[#1B5E20] mb-4">Otros cursos disponibles</h2>
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {courses.map((course: any) => {
+          const isSelected = Boolean(course.enrolled);
+          const displayPrice = Number(course.precio) === 0 ? "GRATIS" : `USD ${course.precio}`;
+          return (
+            <Card key={course.id} className={`border-[#C8E6C9] shadow-sm hover:shadow-md transition-shadow ${isSelected ? "ring-2 ring-[#8BC34A]" : ""}`}>
+              <CardHeader className="bg-gradient-to-r from-[#1B5E20] to-[#2E7D32] text-white pb-3">
+                <div className="flex items-center justify-between gap-2">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Mountain className="w-4 h-4" />
+                    Nivel {course.nivel}
+                  </CardTitle>
+                  {isSelected && <Badge className="bg-[#8BC34A] text-[#1A1A1A]">Elegido</Badge>}
+                </div>
+                <p className="text-sm text-green-100 mt-1">{course.titulo}</p>
+              </CardHeader>
+              <CardContent className="p-4 space-y-3">
+                <div>
+                  <p className="text-xs text-gray-500 font-semibold mb-1">DESCRIPCIÓN</p>
+                  <p className="text-sm text-gray-600 line-clamp-2">{course.descripcion || "Certificación de montaña"}</p>
+                </div>
+                <div className="flex items-center justify-between pt-2 border-t border-[#E8F5E9] gap-3">
+                  <div>
+                    <p className="text-xs text-gray-500">Precio</p>
+                    <p className="text-lg font-bold text-[#1B5E20]">{displayPrice}</p>
+                  </div>
+                  {isSelected ? (
+                    <Button
+                      onClick={() => navigate(`/curso/${course.nivel}/modulo/1`)}
+                      className="bg-[#1B5E20] text-white hover:bg-[#2E7D32] text-sm"
+                    >
+                      Continuar curso
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={() => handleEnroll(course.id)}
+                      disabled={enrollingId === course.id}
+                      className="bg-[#8BC34A] text-[#1A1A1A] hover:bg-[#7CB342] text-sm"
+                    >
+                      {enrollingId === course.id ? "Inscribiendo..." : "Elegir curso"}
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 export default function Dashboard() {
   const { user, loading, logout } = useAuth();
@@ -47,15 +137,14 @@ export default function Dashboard() {
     return null;
   }
 
-  // moduleProgress entries are joined with modules.numero via the server
-  const moduleProgressByNum = Object.fromEntries(
-    (progress?.moduleProgress ?? []).map((p) => [(p as any).moduleNumero ?? p.moduleId, p])
+  const moduleProgressMap = Object.fromEntries(
+    (progress?.moduleProgress ?? []).map((p) => [p.moduleNumber, p])
   );
-  const completedModules = (progress?.moduleProgress ?? []).filter((p) => p.estado === "aprobado").length;
+  const completedModules = (progress?.moduleProgress ?? []).filter((p) => p.passed).length;
   const totalModules = 5;
   const progressPercent = Math.round((completedModules / totalModules) * 100);
   const hasCertificate = (progress?.certificates ?? []).some((c) => c.courseLevel === 0);
-  const nivel0Completado = progress?.courseProgress?.estado === "completado";
+  const nivel0Completado = progress?.courseProgress?.nivel0Completado === 1;
 
   return (
     <div className="min-h-screen bg-[#F8FAF5]">
@@ -167,16 +256,16 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent className="p-0">
               {[
-                { num: 1, title: "Módulo 1: ¿Por qué caminamos en la montaña?", subtitle: "Historia, cultura y ética", duration: "20 min" },
-                { num: 2, title: "Módulo 2: ¿Qué llevar? Equipamiento esencial", subtitle: "Mochila, calzado, hidratación", duration: "25 min" },
-                { num: 3, title: "Módulo 3: Clima y meteorología de montaña", subtitle: "Cómo leer el tiempo", duration: "20 min" },
-                { num: 4, title: "Módulo 4: Orientación y señalización", subtitle: "Cómo no perderse", duration: "25 min" },
-                { num: 5, title: "Módulo 5: Conducta en la montaña y Leave No Trace", subtitle: "Cuidar el entorno", duration: "20 min" },
+                { num: 1, title: "¿Por qué caminamos en la montaña?", subtitle: "Historia, cultura y ética", duration: "20 min" },
+                { num: 2, title: "¿Qué llevar? Equipamiento esencial", subtitle: "Mochila, calzado, hidratación", duration: "25 min" },
+                { num: 3, title: "Clima y meteorología de montaña", subtitle: "Cómo leer el tiempo", duration: "20 min" },
+                { num: 4, title: "Orientación y señalización", subtitle: "Cómo no perderse", duration: "25 min" },
+                { num: 5, title: "Conducta en la montaña y Leave No Trace", subtitle: "Cuidar el entorno", duration: "20 min" },
               ].map((mod, idx) => {
-                const mp = moduleProgressByNum[mod.num];
-                const passed = mp?.estado === "aprobado";
-                const attempted = (mp?.intentos ?? 0) > 0;
-                const prevPassed = mod.num === 1 || moduleProgressByNum[mod.num - 1]?.estado === "aprobado";
+                const mp = moduleProgressMap[mod.num];
+                const passed = mp?.passed === 1;
+                const attempted = (mp?.attempts ?? 0) > 0;
+                const prevPassed = mod.num === 1 || moduleProgressMap[mod.num - 1]?.passed === 1;
                 const isLocked = !prevPassed;
 
                 return (
@@ -214,7 +303,7 @@ export default function Dashboard() {
                       </div>
                       {passed && (
                         <Badge className="bg-[#E8F5E9] text-[#1B5E20] text-xs border border-[#C8E6C9]">
-                          {mp?.notaExamen}%
+                          {mp?.examScore}%
                         </Badge>
                       )}
                       {attempted && !passed && (
@@ -230,9 +319,9 @@ export default function Dashboard() {
 
               {/* Final Exam Row */}
               {(() => {
-                const allPassed = [1, 2, 3, 4, 5].every((n) => moduleProgressByNum[n]?.estado === "aprobado");
-                const finalPassed = progress?.courseProgress?.estado === "completado";
-                const finalAttempted = false;
+                const allPassed = [1, 2, 3, 4, 5].every((n) => moduleProgressMap[n]?.passed === 1);
+                const finalPassed = moduleProgressMap[6]?.passed === 1;
+                const finalAttempted = (moduleProgressMap[6]?.attempts ?? 0) > 0;
 
                 return (
                   <div
@@ -280,26 +369,8 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        {/* Other Levels (Coming Soon) */}
-        <div>
-          <h2 className="text-xl font-bold text-[#1B5E20] mb-4">Próximos niveles</h2>
-          <div className="grid sm:grid-cols-3 gap-4">
-            {[1, 2, 3].map((level) => (
-              <Card key={level} className="border-gray-200 opacity-60">
-                <CardContent className="p-5 text-center">
-                  <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <Lock className="w-6 h-6 text-gray-400" />
-                  </div>
-                  <h3 className="font-bold text-gray-500 text-sm">{LEVEL_NAMES[level]}</h3>
-                  <p className="text-xs text-gray-400 mt-1">{LEVEL_PRICES[level]}</p>
-                  <Badge variant="outline" className="mt-3 text-xs text-gray-400 border-gray-300">
-                    Próximamente
-                  </Badge>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
+        {/* Other Available Courses */}
+        <OtherCoursesSection user={user} />
       </div>
     </div>
   );

@@ -1,0 +1,1 @@
+ALTER TABLE `course_progress` ADD `nivel_4_completado` int DEFAULT 0 NOT NULL;

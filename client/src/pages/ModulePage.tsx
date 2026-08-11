@@ -110,7 +110,8 @@ export default function ModulePage() {
   };
 
   const handleNextModule = () => {
-    if (moduleNumber < 5) {
+    const totalModules = moduleData?.totalModules ?? 5;
+    if (moduleNumber < totalModules) {
       navigate(`/curso/${level}/modulo/${moduleNumber + 1}`);
     } else {
       navigate(`/curso/${level}/examen-final`);
@@ -134,7 +135,7 @@ export default function ModulePage() {
                 <Mountain className="w-4 h-4 text-white" />
               </div>
               <div className="min-w-0">
-                <p className="text-xs text-gray-400">Nivel 0 · Módulo {moduleNumber}</p>
+                <p className="text-xs text-gray-400">Nivel {level} · Módulo {moduleNumber}</p>
                 <p className="text-sm font-semibold text-[#1B5E20] truncate">{moduleData?.title}</p>
               </div>
             </div>
@@ -145,7 +146,7 @@ export default function ModulePage() {
           </div>
           {/* Progress bar */}
           <div className="h-1 bg-[#E8F5E9]">
-            <div className="h-1 bg-[#8BC34A]" style={{ width: `${(moduleNumber / 5) * 100}%` }} />
+            <div className="h-1 bg-[#8BC34A]" style={{ width: `${(moduleNumber / (moduleData?.totalModules ?? 5)) * 100}%` }} />
           </div>
         </div>
 
@@ -162,6 +163,26 @@ export default function ModulePage() {
           )}
 
           {/* Module content rendered as markdown */}
+          {moduleData?.pdfUrl && (
+            <div className="bg-[#F1F8E9] border border-[#C8E6C9] rounded-xl p-4 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <BookOpen className="w-5 h-5 text-[#1B5E20]" />
+                <div>
+                  <p className="font-semibold text-[#1B5E20]">Material teórico del módulo</p>
+                  <p className="text-xs text-gray-500 truncate max-w-[260px]">{moduleData.pdfNombre ?? "Abrir PDF"}</p>
+                </div>
+              </div>
+              <a
+                href={moduleData.pdfUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center justify-center rounded-lg bg-[#1B5E20] px-4 py-2 text-sm font-semibold text-white hover:bg-[#2E7D32]"
+              >
+                Leer PDF
+              </a>
+            </div>
+          )}
+
           <div className="bg-white rounded-2xl shadow-sm border border-[#E8F5E9] p-6 md:p-8 prose prose-green max-w-none">
             <Streamdown>{moduleData?.content ?? ""}</Streamdown>
           </div>
@@ -346,7 +367,7 @@ export default function ModulePage() {
               <div className="space-y-3">
                 {result.passed ? (
                   <>
-                    {moduleNumber < 5 ? (
+                    {moduleNumber < (moduleData?.totalModules ?? 5) ? (
                       <Button
                         onClick={handleNextModule}
                         className="w-full bg-[#1B5E20] hover:bg-[#2E7D32] text-white font-semibold py-3"
@@ -356,7 +377,7 @@ export default function ModulePage() {
                       </Button>
                     ) : (
                       <Button
-                        onClick={() => navigate("/curso/0/examen-final")}
+                        onClick={() => navigate(`/curso/${level}/examen-final`)}
                         className="w-full bg-[#1B5E20] hover:bg-[#2E7D32] text-white font-semibold py-3"
                       >
                         <Trophy className="w-4 h-4 mr-2" />

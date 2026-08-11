@@ -18,6 +18,15 @@ export default function FinalExam() {
   const level = parseInt(params.level ?? "0");
   const [, navigate] = useLocation();
   const { user, loading: authLoading } = useAuth();
+  const { data: allCourses } = trpc.courses.getAllCourses.useQuery(undefined, {
+    enabled: !!user && !authLoading,
+  });
+  const { data: courseModules } = trpc.courses.getModules.useQuery({ level }, {
+    enabled: !!user && !authLoading,
+  });
+  const courseTitle = allCourses?.find((course) => course.nivel === level)?.titulo ?? (level === 0 ? "Explorador Iniciante" : `Curso Nivel ${level}`);
+  const moduleCount = courseModules?.length ?? (level === 0 ? 5 : 4);
+  const finalModuleNumber = level === 0 ? 6 : moduleCount + 1;
 
   const [phase, setPhase] = useState<Phase>("intro");
   const [answers, setAnswers] = useState<(number | null)[]>([]);
@@ -30,7 +39,7 @@ export default function FinalExam() {
   } | null>(null);
 
   const { data: questions, isLoading: questionsLoading, error: questionsError } = trpc.courses.getExamQuestions.useQuery(
-    { level, moduleNumber: 6 },
+    { level, moduleNumber: finalModuleNumber },
     { enabled: phase === "exam" && !!user && !authLoading }
   );
 
@@ -70,7 +79,7 @@ export default function FinalExam() {
       toast.error(`Respondé la pregunta ${unanswered + 1} antes de enviar.`);
       return;
     }
-    submitExam.mutate({ level, moduleNumber: 6, answers: answers as number[] });
+    submitExam.mutate({ level, moduleNumber: finalModuleNumber, answers: answers as number[] });
   };
 
   // ============================================================
@@ -99,7 +108,7 @@ export default function FinalExam() {
               <Trophy className="w-14 h-14 text-white" />
             </div>
             <h1 className="text-3xl font-bold text-[#1B5E20] mb-3">Examen Integrador Final</h1>
-            <p className="text-gray-500 text-lg">Nivel 0 — Explorador Iniciante</p>
+            <p className="text-gray-500 text-lg">Nivel {level} — {courseTitle}</p>
           </div>
 
           <Card className="border-2 border-[#C8E6C9] shadow-lg mb-6">
@@ -128,7 +137,7 @@ export default function FinalExam() {
                     <ul className="space-y-1 text-green-100 text-sm">
                       <li className="flex items-center gap-2">
                         <CheckCircle className="w-4 h-4 text-[#8BC34A]" />
-                        Certificado digital "Explorador Iniciante"
+                        Certificado digital "{courseTitle}"
                       </li>
                       <li className="flex items-center gap-2">
                         <CheckCircle className="w-4 h-4 text-[#8BC34A]" />
@@ -150,7 +159,7 @@ export default function FinalExam() {
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-2">
                 <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
                 <p className="text-sm text-amber-700">
-                  Este examen integra contenidos de los 5 módulos. Repasá el material si lo necesitás antes de comenzar.
+                  Este examen integra contenidos de los {moduleCount} módulos. Repasá el material si lo necesitás antes de comenzar.
                 </p>
               </div>
             </CardContent>
@@ -204,7 +213,7 @@ export default function FinalExam() {
               <ChevronLeft className="w-5 h-5" />
             </button>
             <div className="flex-1">
-              <p className="text-xs text-gray-400">Examen Final · Nivel 0</p>
+              <p className="text-xs text-gray-400">Examen Final · Nivel {level}</p>
               <p className="text-sm font-semibold text-[#1B5E20]">Examen Integrador</p>
             </div>
             <Badge className="bg-[#E8F5E9] text-[#1B5E20] border border-[#C8E6C9]">
@@ -301,7 +310,7 @@ export default function FinalExam() {
                 </div>
               </div>
               <h1 className="text-3xl font-bold text-white mt-4 mb-2">¡Felicitaciones!</h1>
-              <p className="text-green-200 text-lg">Obtuviste el certificado de Explorador Iniciante</p>
+              <p className="text-green-200 text-lg">Obtuviste el certificado de {courseTitle}</p>
             </div>
 
             <Card className="bg-white shadow-2xl border-0 overflow-hidden">
@@ -317,7 +326,7 @@ export default function FinalExam() {
                 </p>
                 <p className="text-green-200 text-sm mb-3">ha completado exitosamente el</p>
                 <div className="bg-[#8BC34A] text-[#1A1A1A] rounded-full px-6 py-2 inline-block font-bold">
-                  Nivel 0 — Explorador Iniciante
+                  Nivel {level} — {courseTitle}
                 </div>
                 <p className="text-green-200 text-sm mt-3">Puntaje: {result.score}% · Válido por 2 años</p>
               </div>

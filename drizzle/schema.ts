@@ -100,38 +100,25 @@ export type InsertExamQuestion = typeof examQuestions.$inferInsert;
 
 // ============================================================
 // COURSE PROGRESS TABLE
-// One row per user+course. Replaces the old denormalized
-// nivel_X_completado columns (Open/Closed: new courses don't
-// require schema changes).
 // ============================================================
-export const courseProgress = mysqlTable(
-  "course_progress",
-  {
-    id: int("id").autoincrement().primaryKey(),
-    userId: int("user_id")
-      .notNull()
-      .references(() => users.id),
-    courseId: int("course_id")
-      .notNull()
-      .references(() => courses.id),
-    estado: mysqlEnum("estado", ["activo", "completado"]).default("activo").notNull(),
-    notaFinal: int("nota_final"),
-    startedAt: timestamp("started_at").defaultNow().notNull(),
-    completedAt: timestamp("completed_at"),
-  },
-  (table) => ({
-    uniqueUserCourse: uniqueIndex("unique_user_course").on(table.userId, table.courseId),
-  })
-);
+export const courseProgress = mysqlTable("course_progress", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("user_id")
+    .notNull()
+    .references(() => users.id),
+  nivel0Completado: int("nivel_0_completado").default(0).notNull(),
+  nivel1Completado: int("nivel_1_completado").default(0).notNull(),
+  nivel2Completado: int("nivel_2_completado").default(0).notNull(),
+  nivel3Completado: int("nivel_3_completado").default(0).notNull(),
+  nivel4Completado: int("nivel_4_completado").default(0).notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+});
 
 export type CourseProgress = typeof courseProgress.$inferSelect;
 export type InsertCourseProgress = typeof courseProgress.$inferInsert;
 
 // ============================================================
 // MODULE PROGRESS TABLE
-// One row per user+module. Uses moduleId FK instead of the
-// redundant (courseLevel, moduleNumber) natural key pair
-// (Single Responsibility: FK to the module is sufficient).
 // ============================================================
 export const moduleProgress = mysqlTable(
   "module_progress",
@@ -140,16 +127,19 @@ export const moduleProgress = mysqlTable(
     userId: int("user_id")
       .notNull()
       .references(() => users.id),
-    moduleId: int("module_id")
-      .notNull()
-      .references(() => modules.id),
-    estado: mysqlEnum("estado", ["pendiente", "aprobado", "reprobado"]).default("pendiente").notNull(),
-    notaExamen: int("nota_examen").default(0).notNull(),
-    intentos: int("intentos").default(0).notNull(),
+    courseLevel: int("course_level").notNull(),
+    moduleNumber: int("module_number").notNull(),
+    examScore: int("exam_score").default(0).notNull(),
+    passed: int("passed").default(0).notNull(),
+    attempts: int("attempts").default(0).notNull(),
     completedAt: timestamp("completed_at"),
   },
   (table) => ({
-    uniqueUserModule: uniqueIndex("unique_user_module").on(table.userId, table.moduleId),
+    uniqueUserModule: uniqueIndex("unique_user_module").on(
+      table.userId,
+      table.courseLevel,
+      table.moduleNumber
+    ),
   })
 );
 
