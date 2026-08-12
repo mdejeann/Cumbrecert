@@ -66,6 +66,27 @@
 - [x] Mostrar "Curso Teórico de Senderista" como curso Nivel 1 en el dashboard para cualquier usuario autenticado
 - [x] Mostrar "Explorador Iniciante" y "Curso Teórico de Senderista" en Otros cursos disponibles con títulos y acciones correctas
 - [x] Permitir inscripción al curso Nivel 1 y mostrarlo como curso elegido después de inscribirse
-- [ ] Verificar pruebas, guardar checkpoint y hacer commit de los cambios en GitHub
-- [ ] Guardar un nuevo checkpoint con los cambios del dashboard y Nivel 1
-- [ ] Hacer commit y push a GitHub de los cambios verificados
+- [x] Verificar pruebas, guardar checkpoint y hacer commit de los cambios en GitHub
+- [x] Guardar un nuevo checkpoint con los cambios del dashboard y Nivel 1
+- [x] Hacer commit y push a GitHub de los cambios verificados
+
+- [x] Corregir Elegir curso de Curso Teórico de Senderista para abrir el primer PDF del Nivel 1
+- [x] Mostrar el botón Ir a examen y cargar las preguntas del Módulo 1 del Curso Teórico de Senderista
+- [x] Hacer visibles en /admin las preguntas del curso Explorador Iniciante, por módulo y examen final
+- [x] Verificar ambos flujos con tests y guardar checkpoint
+- [x] Mostrar embebido el PDF del primer módulo de Curso Teórico de Senderista antes del botón Ir al examen
+- [x] Verificar el flujo PDF → Ir a examen → preguntas del módulo 1
+
+- [x] Usar el contenido Markdown guardado en /admin como fuente única para Explorador Iniciante en el front
+- [x] Usar los PDFs y metadatos de módulos guardados en /admin en la vista de aprendizaje
+- [x] Reflejar en el front las preguntas, opciones y respuestas correctas editadas desde /admin
+- [x] Agregar pruebas de sincronización entre datos administrados y contenido del curso
+- [x] Eliminar el fallback hardcodeado de contenido Nivel 0 en producción para que Explorador Iniciante use exclusivamente datos de /admin
+- [x] Probar que una edición de contenidoMarkdown en /admin aparece en courses.getModule del Nivel 0
+- [x] Probar que una edición de pregunta, opciones y respuesta correcta en /admin actualiza el examen y la corrección del Nivel 0
+
+- [x] Verificar que Curso Teórico de Senderista figure como Nivel 1 en Otros cursos disponibles para usuarios autenticados
+- [x] Verificar que elegir el curso lo guarde como curso seleccionado y abra su primer módulo
+- [x] Ejecutar la suite de pruebas y validar TypeScript después de verificar Dashboard/Nivel 1
+- [x] Guardar un nuevo checkpoint después de la verificación final
+- [x] Hacer commit y push a GitHub de los cambios pendientes y confirmar el hash

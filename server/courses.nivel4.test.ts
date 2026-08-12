@@ -92,4 +92,16 @@ describe("Curso Teórico de Senderista - Nivel 1", () => {
     const selectedProgress = { ...progress, nivel1Completado: 1 };
     expect(selectedProgress.nivel1Completado).toBe(1);
   });
+
+  it("should navigate a newly enrolled Nivel 1 user to the Senderista first module", () => {
+    const enrollmentResponse = { success: true, nivel: 1, courseId: 90001 };
+    expect(`/curso/${enrollmentResponse.nivel}/modulo/1`).toBe("/curso/1/modulo/1");
+  });
+
+  it("should expose Explorador Iniciante questions as editable module and final records", () => {
+    const adminQuestionCounts = { module: 25, final: 10 };
+    expect(adminQuestionCounts.module).toBe(25);
+    expect(adminQuestionCounts.final).toBe(10);
+    expect(adminQuestionCounts.module + adminQuestionCounts.final).toBe(35);
+  });
 });

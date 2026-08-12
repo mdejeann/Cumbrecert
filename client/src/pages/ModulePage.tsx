@@ -164,22 +164,32 @@ export default function ModulePage() {
 
           {/* Module content rendered as markdown */}
           {moduleData?.pdfUrl && (
-            <div className="bg-[#F1F8E9] border border-[#C8E6C9] rounded-xl p-4 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <BookOpen className="w-5 h-5 text-[#1B5E20]" />
-                <div>
-                  <p className="font-semibold text-[#1B5E20]">Material teórico del módulo</p>
-                  <p className="text-xs text-gray-500 truncate max-w-[260px]">{moduleData.pdfNombre ?? "Abrir PDF"}</p>
+            <div className="bg-[#F1F8E9] border border-[#C8E6C9] rounded-xl p-4 mb-6">
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <BookOpen className="w-5 h-5 text-[#1B5E20] flex-shrink-0" />
+                  <div className="min-w-0">
+                    <p className="font-semibold text-[#1B5E20]">Material teórico del módulo</p>
+                    <p className="text-xs text-gray-500 truncate">{moduleData.pdfNombre ?? "PDF del módulo"}</p>
+                  </div>
                 </div>
+                <a
+                  href={moduleData.pdfUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs font-semibold text-[#1B5E20] hover:underline flex-shrink-0"
+                >
+                  Abrir en otra pestaña
+                </a>
               </div>
-              <a
-                href={moduleData.pdfUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center justify-center rounded-lg bg-[#1B5E20] px-4 py-2 text-sm font-semibold text-white hover:bg-[#2E7D32]"
-              >
-                Leer PDF
-              </a>
+              <iframe
+                src={`${moduleData.pdfUrl}#view=FitH`}
+                title={moduleData.pdfNombre ?? `Material del Módulo ${moduleNumber}`}
+                className="w-full h-[65vh] min-h-[520px] rounded-lg border border-[#C8E6C9] bg-white"
+              />
+              <p className="text-xs text-gray-500 mt-3 text-center">
+                Leé el material completo y después seleccioná “Ir al examen” para responder las preguntas del módulo.
+              </p>
             </div>
           )}
 

@@ -25,9 +25,9 @@ function OtherCoursesSection({ user: _user }: { user: any }) {
   const handleEnroll = async (courseId: number) => {
     setEnrollingId(courseId);
     try {
-      await enrollMutation.mutateAsync({ courseId });
+      const enrolledCourse = await enrollMutation.mutateAsync({ courseId });
       toast.success("¡Curso elegido! Ya podés comenzar los módulos.");
-      window.location.reload();
+      navigate(`/curso/${enrolledCourse.nivel}/modulo/1`);
     } catch (error: any) {
       toast.error(error?.message || "Error al inscribirse");
     } finally {
