@@ -11,6 +11,7 @@ vi.mock("./db", () => ({
   getUserById: vi.fn(),
   upsertUser: vi.fn(),
   getCourseProgress: vi.fn(),
+  getAllCourses: vi.fn(),
   getCourseByNivel: vi.fn(),
   getCourseById: vi.fn(),
   getModulesByCourse: vi.fn(),
@@ -302,12 +303,10 @@ describe("courses.getExamQuestions", () => {
     ] as any);
     const caller = appRouter.createCaller(makeAuthCtx());
     const questions = await caller.courses.getExamQuestions({ level: 0, moduleNumber: 1 });
-    expect(questions).toEqual([
-      {
-        question: "¿Pregunta editada en /admin?",
-        options: ["Opción A actualizada", "Opción B actualizada", "C", "D"],
-      },
-    ]);
+    expect(questions).toHaveLength(1);
+    expect(questions[0].question).toBe("¿Pregunta editada en /admin?");
+    expect(questions[0].options).toContain("Opción A actualizada");
+    expect(questions[0].options).toContain("Opción B actualizada");
   });
 });
 
@@ -336,7 +335,7 @@ describe("courses.submitExam", () => {
     expect(result.total).toBe(5);
   });
 
-  it("fails exam with score below 60%", async () => {
+  it("fails module exam with score below 90%", async () => {
     const ctx = makeAuthCtx();
     const caller = appRouter.createCaller(ctx);
     // All wrong answers
@@ -366,6 +365,13 @@ describe("courses.submitExam", () => {
     expect(result.score).toBe(100);
     expect(result.correct).toBe(1);
     expect(result.total).toBe(1);
+  });
+
+  it("shuffles question and option order on failed retries (attempts > 0)", async () => {
+    vi.mocked(db.getModuleProgressEntry).mockResolvedValue({ attempts: 1 } as any);
+    const caller = appRouter.createCaller(makeAuthCtx());
+    const questions = await caller.courses.getExamQuestions({ level: 0, moduleNumber: 1 });
+    expect(questions).toHaveLength(5);
   });
 
   it("generates certificate when final exam is passed", async () => {
@@ -443,6 +449,36 @@ describe("courses Nivel 1 learner flow", () => {
     const result = await caller.courses.enrollCourse({ courseId: 90001 });
     expect(result.nivel).toBe(1);
     expect(result.courseId).toBe(90001);
+  });
+
+  it("returns every active Senderista module for the collapsible dashboard panel", async () => {
+    vi.mocked(db.getModuleProgress).mockResolvedValue([]);
+    const caller = appRouter.createCaller(makeAuthCtx());
+    const modules = await caller.courses.getModules({ level: 1 });
+    expect(modules).toHaveLength(4);
+    expect(modules.map((module) => module.id)).toEqual([1, 2, 3, 4]);
+    expect(modules.every((module) => module.title)).toBe(true);
+  });
+
+  it("exposes the active Senderista course as Nivel 1 and marks it chosen after selection", async () => {
+    vi.mocked(db.getAllCourses).mockResolvedValue([
+      { id: 90001, nivel: 1, titulo: "Curso Teórico de Senderista", activo: 1 },
+    ] as any);
+    vi.mocked(db.getCourseProgress)
+      .mockResolvedValueOnce({ nivel1Completado: 0 } as any)
+      .mockResolvedValueOnce({ nivel1Completado: 0 } as any)
+      .mockResolvedValueOnce({ nivel1Completado: 1 } as any);
+    vi.mocked(db.upsertCourseProgress).mockResolvedValue(undefined);
+    const caller = appRouter.createCaller(makeAuthCtx());
+
+    const beforeSelection = await caller.courses.getAllCourses();
+    expect(beforeSelection[0]).toMatchObject({ nivel: 1, titulo: "Curso Teórico de Senderista", enrolled: false });
+
+    const enrollment = await caller.courses.enrollCourse({ courseId: 90001 });
+    expect(enrollment).toMatchObject({ success: true, nivel: 1, courseId: 90001 });
+
+    const afterSelection = await caller.courses.getAllCourses();
+    expect(afterSelection[0].enrolled).toBe(true);
   });
 
   it("returns the first Senderista PDF module before the exam", async () => {

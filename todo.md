@@ -90,3 +90,31 @@
 - [x] Ejecutar la suite de pruebas y validar TypeScript después de verificar Dashboard/Nivel 1
 - [x] Guardar un nuevo checkpoint después de la verificación final
 - [x] Hacer commit y push a GitHub de los cambios pendientes y confirmar el hash
+
+- [x] Eliminar el botón CTA principal del hero marcado como "eliminarlo"
+- [x] Verificar el cambio de navegación "Mis Cursos" después de guardar el nuevo checkpoint
+- [x] Guardar un nuevo checkpoint con los cambios visuales de Home.tsx
+
+- [x] Extraer el contenido Markdown de los módulos 2, 3, 4 y 5 del curso Explorador Iniciante
+- [x] Implementar mezcla aleatoria de preguntas y opciones de respuesta cuando el alumno desaprueba un examen
+- [x] Probar el nuevo comportamiento de reintentos y guardar checkpoint
+
+- [x] Configurar 90% para aprobar exámenes de módulo y 80% para el examen final
+- [x] Devolver y mostrar las correcciones detalladas (pregunta, respuesta elegida y correcta) al finalizar cada intento
+- [x] Incluir el contenido Markdown de los módulos 2, 3, 4 y 5 en la respuesta al usuario
+
+- [x] Corregir el error de React "Rendered more hooks than during the previous render" en ModulePage
+- [x] Mostrar en cada módulo el contenido Markdown actualmente guardado en /admin
+- [x] Verificar /curso/0/modulo/1, tests y TypeScript, y guardar checkpoint
+
+- [x] Formatear el contenido Markdown del Módulo 1 (Explorador Iniciante) con títulos en mayúsculas e indentación clara
+- [x] Actualizar la base de datos y verificar que se sincronice en el front del alumno
+- [x] Ejecutar tests, validar TypeScript y guardar checkpoint
+
+- [x] Hacer desplegables y plegables de forma independiente los cursos del Dashboard
+- [x] Mostrar todos los módulos administrados de Curso Teórico de Senderista al abrirlo
+- [x] Verificar responsive, tests, TypeScript y guardar checkpoint
+
+- [x] Confirmar Curso Teórico de Senderista visible como Nivel 1 para cualquier usuario autenticado
+- [x] Confirmar que elegirlo persiste el progreso y lo muestra como curso elegido
+- [x] Verificar flujo, ejecutar tests y TypeScript, hacer commit y push a GitHub
