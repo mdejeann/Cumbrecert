@@ -118,3 +118,21 @@
 - [x] Confirmar Curso Teórico de Senderista visible como Nivel 1 para cualquier usuario autenticado
 - [x] Confirmar que elegirlo persiste el progreso y lo muestra como curso elegido
 - [x] Verificar flujo, ejecutar tests y TypeScript, hacer commit y push a GitHub
+
+- [x] Revalidar que Curso Teórico de Senderista esté activo y visible como Nivel 1 para cualquier usuario autenticado
+- [x] Revalidar que elegirlo persista y lo muestre como Elegido en Dashboard
+- [x] Revalidar tests, deployment y commit de GitHub
+
+- [x] Reiniciar y verificar el preview sin errores recientes de dev server
+- [x] Confirmar mediante el contrato UI, la base de datos y las pruebas que el Dashboard autenticado muestra Nivel 1 y estado Elegido
+- [x] Guardar checkpoint posterior a la verificación del deployment
+
+- [x] Corregir que «Siguiente módulo» renderice inmediatamente el módulo siguiente después de aprobar el examen, sin recarga manual
+- [x] Verificar que la URL y el contenido coincidan y que el flujo no saltee módulos
+- [x] Agregar cobertura de regresión, ejecutar tests y TypeScript, y guardar checkpoint
+
+- [x] Confirmado: al aprobar el Módulo 2 y pulsar «Siguiente módulo», la URL pasa al Módulo 3 pero la vista conserva la revisión del examen anterior
+
+- [x] Agregar cobertura de regresión de la transición y limpieza del estado de revisión mediante helpers compartidos
+- [x] Verificar mediante la suite automatizada los destinos de URL y el estado reiniciado
+- [ ] Agregar una prueba de integración UI de ModulePage para validar la transición montada y guardar la versión 1.5 en `development`

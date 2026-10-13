@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useLocation, Link } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Streamdown } from "streamdown";
+import { createModuleResetState, getNextModuleTransition } from "@shared/moduleNavigation";
 
 type Phase = "content" | "exam" | "result";
 
@@ -21,10 +22,21 @@ export default function ModulePage() {
   const moduleNumber = parseInt(params.module ?? "1");
   const [, navigate] = useLocation();
   const { user, loading: authLoading } = useAuth();
+  const utils = trpc.useUtils();
 
   const [phase, setPhase] = useState<Phase>("content");
   const [answers, setAnswers] = useState<(number | null)[]>([]);
-  const [result, setResult] = useState<{ score: number; passed: boolean; correct: number; total: number; certificate?: any } | null>(null);
+  const [result, setResult] = useState<{ score: number; passed: boolean; correct: number; total: number; certificate?: any; corrections?: any[] } | null>(null);
+
+  // Wouter keeps the same component mounted when only the module parameter changes.
+  // Clear the previous exam result so the newly navigated module never shows the
+  // review screen from the module the learner just completed.
+  useEffect(() => {
+    const resetState = createModuleResetState();
+    setPhase("content");
+    setAnswers(resetState.answers);
+    setResult(resetState.result);
+  }, [level, moduleNumber]);
 
   const { data: moduleData, isLoading: moduleLoading, error: moduleError } = trpc.courses.getModule.useQuery(
     { level, moduleNumber },
@@ -35,6 +47,8 @@ export default function ModulePage() {
     { level, moduleNumber },
     { enabled: phase === "exam" && !!user }
   );
+
+  const moduleDataIsStale = moduleData !== undefined && moduleData.id !== moduleNumber;
 
   const submitExam = trpc.courses.submitExam.useMutation({
     onSuccess: (data) => {
@@ -51,7 +65,7 @@ export default function ModulePage() {
     },
   });
 
-  if (authLoading || moduleLoading) {
+  if (authLoading || moduleLoading || moduleDataIsStale) {
     return (
       <div className="min-h-screen bg-[#F8FAF5] flex items-center justify-center">
         <div className="text-center">
@@ -106,16 +120,20 @@ export default function ModulePage() {
   const handleRetry = () => {
     setAnswers([]);
     setResult(null);
+    utils.courses.getExamQuestions.invalidate({ level, moduleNumber });
     setPhase("exam");
   };
 
   const handleNextModule = () => {
     const totalModules = moduleData?.totalModules ?? 5;
-    if (moduleNumber < totalModules) {
-      navigate(`/curso/${level}/modulo/${moduleNumber + 1}`);
-    } else {
-      navigate(`/curso/${level}/examen-final`);
-    }
+
+    // Reset local exam state before changing only the route parameter. Without
+    // this, the mounted ModulePage instance keeps rendering the previous review.
+    const transition = getNextModuleTransition(level, moduleNumber, totalModules);
+    setPhase("content");
+    setAnswers(transition.answers);
+    setResult(transition.result);
+    navigate(transition.path);
   };
 
   // ============================================================
@@ -255,7 +273,7 @@ export default function ModulePage() {
             <div>
               <p className="text-sm font-semibold text-[#1B5E20]">Instrucciones del examen</p>
               <p className="text-sm text-[#2E7D32]">
-                Respondé todas las preguntas. Necesitás un mínimo de 60% para aprobar. Podés reintentar las veces que necesites.
+                Respondé todas las preguntas. Necesitás un mínimo de 90% para aprobar este módulo. Al finalizar verás la corrección detallada.
               </p>
             </div>
           </div>
@@ -349,7 +367,7 @@ export default function ModulePage() {
               <p className="text-gray-500 mb-6">
                 {result.passed
                   ? `Obtuviste ${result.score}% — ¡Excelente trabajo!`
-                  : `Obtuviste ${result.score}%. Necesitás 60% para aprobar.`}
+                  : `Obtuviste ${result.score}%. Necesitás 90% para aprobar.`}
               </p>
 
               {/* Score display */}
@@ -368,10 +386,32 @@ export default function ModulePage() {
                 </div>
                 <div className="flex justify-between text-xs text-gray-400 mt-1">
                   <span>0%</span>
-                  <span className="text-orange-500">60% mínimo</span>
+                  <span className="text-orange-500">90% mínimo</span>
                   <span>100%</span>
                 </div>
               </div>
+
+              {/* Detailed Corrections */}
+              {result.corrections && (
+                <div className="mb-6 text-left space-y-3">
+                  <h3 className="font-bold text-[#1B5E20] text-sm uppercase tracking-wider">Corrección detallada</h3>
+                  {result.corrections.map((corr: any, idx: number) => (
+                    <div key={idx} className={`p-3 rounded-lg border text-sm ${corr.isCorrect ? "bg-green-50 border-green-200 text-green-900" : "bg-red-50 border-red-200 text-red-900"}`}>
+                      <p className="font-semibold mb-1">
+                        {idx + 1}. {corr.question}
+                      </p>
+                      <p className="text-xs">
+                        Tu respuesta: <span className="font-medium">{corr.userAnswerText}</span> {corr.isCorrect ? "✅" : "❌"}
+                      </p>
+                      {!corr.isCorrect && (
+                        <p className="text-xs text-green-700 mt-0.5">
+                          Respuesta correcta: <span className="font-medium">{corr.correctAnswerText}</span>
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {/* Actions */}
               <div className="space-y-3">
