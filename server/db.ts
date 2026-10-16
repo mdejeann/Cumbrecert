@@ -125,22 +125,44 @@ export async function updateUserRole(userId: number, role: "user" | "admin") {
 export async function getCourseProgress(userId: number) {
   const db = await getDb();
   if (!db) return null;
-  const result = await db.select().from(courseProgress).where(eq(courseProgress.userId, userId)).limit(1);
-  return result.length > 0 ? result[0] : null;
+  const result = await db.select().from(courseProgress).where(eq(courseProgress.userId, userId));
+  if (result.length === 0) return null;
+  if (result.length === 1) return result[0];
+
+  // Older deployments could create duplicate rows because this table did not
+  // always have a unique user index. Read the effective enrollment state from
+  // all rows so a stale first row cannot hide a course already chosen.
+  return result.reduce((merged, row) => ({
+    ...merged,
+    nivel0Completado: Math.max(merged.nivel0Completado, row.nivel0Completado),
+    nivel1Completado: Math.max(merged.nivel1Completado, row.nivel1Completado),
+    nivel2Completado: Math.max(merged.nivel2Completado, row.nivel2Completado),
+    nivel3Completado: Math.max(merged.nivel3Completado, row.nivel3Completado),
+    nivel4Completado: Math.max(merged.nivel4Completado, row.nivel4Completado),
+    updatedAt: row.updatedAt > merged.updatedAt ? row.updatedAt : merged.updatedAt,
+  }), result[0]);
 }
 
 export async function upsertCourseProgress(data: InsertCourseProgress) {
   const db = await getDb();
   if (!db) return;
-  await db.insert(courseProgress).values(data).onDuplicateKeyUpdate({
-    set: {
-      nivel0Completado: data.nivel0Completado,
-      nivel1Completado: data.nivel1Completado,
-      nivel2Completado: data.nivel2Completado,
-            nivel3Completado: data.nivel3Completado,
-      nivel4Completado: data.nivel4Completado,
-    },
-  });
+  const existing = await db.select({ id: courseProgress.id })
+    .from(courseProgress)
+    .where(eq(courseProgress.userId, data.userId))
+    .limit(1);
+  const values = {
+    nivel0Completado: data.nivel0Completado ?? 0,
+    nivel1Completado: data.nivel1Completado ?? 0,
+    nivel2Completado: data.nivel2Completado ?? 0,
+    nivel3Completado: data.nivel3Completado ?? 0,
+    nivel4Completado: data.nivel4Completado ?? 0,
+  };
+
+  if (existing.length > 0) {
+    await db.update(courseProgress).set(values).where(eq(courseProgress.userId, data.userId));
+  } else {
+    await db.insert(courseProgress).values({ userId: data.userId, ...values });
+  }
 }
 export async function ensureCourseProgress(userId: number) {
   const existing = await getCourseProgress(userId);
