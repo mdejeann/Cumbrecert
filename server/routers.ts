@@ -1,4 +1,4 @@
-import { COOKIE_NAME } from "@shared/const";
+import { COOKIE_NAME, PASS_SCORE } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
@@ -262,6 +262,7 @@ export const appRouter = router({
         let correct = 0;
         let total = 0;
         let isFinal = false;
+        let graded: Awaited<ReturnType<typeof db.getQuestionsByModule>> = [];
 
         if (input.level === 0) {
           const course = await db.getCourseByNivel(0);
@@ -273,11 +274,7 @@ export const appRouter = router({
             : await db.getQuestionsByModule(courseModules.find((mod) => mod.numero === input.moduleNumber)?.id ?? -1);
           const activeDbQuestions = (dbQuestions ?? []).filter((q) => q.activo === 1);
           if (!activeDbQuestions.length) throw new TRPCError({ code: "NOT_FOUND", message: "No hay preguntas activas para este examen." });
-          total = activeDbQuestions.length;
-          for (let i = 0; i < activeDbQuestions.length; i++) {
-            const correctIndex = { a: 0, b: 1, c: 2, d: 3 }[activeDbQuestions[i].respuestaCorrecta];
-            if (input.answers[i] === correctIndex) correct++;
-          }
+          graded = activeDbQuestions;
         } else {
           const course = await db.getCourseByNivel(input.level);
           if (!course || course.activo !== 1) throw new TRPCError({ code: "NOT_FOUND", message: "Curso no disponible aún." });
@@ -288,22 +285,34 @@ export const appRouter = router({
             : await db.getQuestionsByModule(courseModules.find((mod) => mod.numero === input.moduleNumber)?.id ?? -1);
           const activeQuestions = (dbQuestions ?? []).filter((q) => q.activo === 1);
           if (!activeQuestions.length) throw new TRPCError({ code: "NOT_FOUND", message: "No hay preguntas activas para este examen." });
-          total = activeQuestions.length;
-          for (let i = 0; i < activeQuestions.length; i++) {
-            const correctIndex = { a: 0, b: 1, c: 2, d: 3 }[activeQuestions[i].respuestaCorrecta];
-            if (input.answers[i] === correctIndex) correct++;
-          }
+          graded = activeQuestions;
         }
 
+        // Corrección pregunta por pregunta: se devuelve siempre, aprobado o no
+        const corrections = graded.map((q, i) => {
+          const options = [q.opcionA, q.opcionB, q.opcionC, q.opcionD];
+          const correctIndex = ["a", "b", "c", "d"].indexOf(q.respuestaCorrecta);
+          const userIndex = input.answers[i];
+          return {
+            question: q.pregunta,
+            userAnswerText: (userIndex !== undefined && options[userIndex]) || "Sin responder",
+            correctAnswerText: options[correctIndex],
+            isCorrect: userIndex === correctIndex,
+            explicacion: q.explicacion,
+          };
+        });
+        total = graded.length;
+        correct = corrections.filter((c) => c.isCorrect).length;
         const score = total ? Math.round((correct / total) * 100) : 0;
-        const passed = score >= 60;
+        const passed = score >= PASS_SCORE;
         const existing = await db.getModuleProgressEntry(ctx.user.id, input.level, input.moduleNumber);
         await db.upsertModuleProgress({
           userId: ctx.user.id,
           courseLevel: input.level,
           moduleNumber: input.moduleNumber,
-          examScore: score,
-          passed: passed ? 1 : 0,
+          // Repetir un módulo aprobado no lo desaprueba: queda el mejor puntaje
+          examScore: Math.max(score, existing?.examScore ?? 0),
+          passed: passed || existing?.passed === 1 ? 1 : 0,
           attempts: (existing?.attempts ?? 0) + 1,
           completedAt: passed ? new Date() : (existing?.completedAt ?? null),
         });
@@ -329,7 +338,7 @@ export const appRouter = router({
             nivel4Completado: input.level === 4 ? 1 : (cp?.nivel4Completado ?? 0),
           });
         }
-        return { score, passed, correct, total, certificate };
+        return { score, passed, correct, total, certificate, corrections };
       }),
 
     getProgress: protectedProcedure.query(async ({ ctx }) => {

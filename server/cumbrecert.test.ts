@@ -335,7 +335,21 @@ describe("courses.submitExam", () => {
     expect(result.total).toBe(5);
   });
 
-  it("fails module exam with score below 90%", async () => {
+  it("requires 80%: 3 of 5 fails and 4 of 5 passes, returning the corrections", async () => {
+    const ctx = makeAuthCtx();
+    const caller = appRouter.createCaller(ctx);
+    const sixty = await caller.courses.submitExam({ level: 0, moduleNumber: 1, answers: [1, 1, 2, 0, 0] });
+    expect(sixty.score).toBe(60);
+    expect(sixty.passed).toBe(false);
+    const eighty = await caller.courses.submitExam({ level: 0, moduleNumber: 1, answers: [1, 1, 2, 1, 0] });
+    expect(eighty.score).toBe(80);
+    expect(eighty.passed).toBe(true);
+    expect(eighty.corrections).toHaveLength(5);
+    expect(eighty.corrections[4].isCorrect).toBe(false);
+    expect(eighty.corrections[4].correctAnswerText).toBeTruthy();
+  });
+
+  it("fails module exam with score below 80%", async () => {
     const ctx = makeAuthCtx();
     const caller = appRouter.createCaller(ctx);
     // All wrong answers

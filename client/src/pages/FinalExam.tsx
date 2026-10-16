@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { KnotPhotoQuiz } from "@/components/KnotPhotoQuiz";
+import { ExamCorrections, type Correction } from "@/components/ExamCorrections";
+import { PASS_SCORE } from "@shared/const";
 
 // Nivel cuyo examen final arranca con la práctica de los tres nudos
 const KNOT_COURSE_LEVEL = 2;
@@ -42,6 +44,7 @@ export default function FinalExam() {
     correct: number;
     total: number;
     certificate?: { qrCode: string; issuedAt: Date; expiresAt?: Date | null } | null;
+    corrections?: Correction[];
   } | null>(null);
 
   const { data: questions, isLoading: questionsLoading, error: questionsError } = trpc.courses.getExamQuestions.useQuery(
@@ -124,7 +127,7 @@ export default function FinalExam() {
               <div className="grid grid-cols-3 gap-4 text-center">
                 {[
                   { icon: "📝", label: "10 preguntas", sub: "de todos los módulos" },
-                  { icon: "✅", label: "60% para aprobar", sub: "6 de 10 correctas" },
+                  { icon: "✅", label: `${PASS_SCORE}% para aprobar`, sub: `${Math.ceil((PASS_SCORE / 100) * 10)} de 10 correctas` },
                   { icon: "🔄", label: "Reintentos libres", sub: "sin límite de intentos" },
                 ].map((item) => (
                   <div key={item.label} className="bg-[#F1F8E9] rounded-xl p-4">
@@ -413,6 +416,8 @@ export default function FinalExam() {
                   </ul>
                 </div>
 
+                <ExamCorrections corrections={result.corrections} />
+
                 <Button
                   onClick={() => navigate("/dashboard")}
                   className="w-full bg-[#1B5E20] hover:bg-[#2E7D32] text-white font-semibold py-3"
@@ -437,7 +442,7 @@ export default function FinalExam() {
               </div>
               <h2 className="text-2xl font-bold text-orange-600 mb-2">Casi llegás</h2>
               <p className="text-gray-500 mb-6">
-                Obtuviste {result.score}%. Necesitás 60% para aprobar el examen final.
+                Obtuviste {result.score}%. Necesitás {PASS_SCORE}% para aprobar el examen final.
               </p>
 
               <div className="bg-orange-50 rounded-xl p-5 mb-6">
@@ -448,10 +453,12 @@ export default function FinalExam() {
                 </div>
                 <div className="flex justify-between text-xs text-gray-400 mt-1">
                   <span>0%</span>
-                  <span className="text-orange-500">60% mínimo</span>
+                  <span className="text-orange-500">{PASS_SCORE}% mínimo</span>
                   <span>100%</span>
                 </div>
               </div>
+
+              <ExamCorrections corrections={result.corrections} />
 
               <div className="space-y-3">
                 <Button
