@@ -55,7 +55,23 @@ export async function seedIfEmpty(db: LibSQLDatabase) {
 // Agrega el Curso de Nudos (nivel 2) si todavía no existe
 export async function ensureNudosCourse(db: LibSQLDatabase) {
   const existing = await db.select({ id: courses.id }).from(courses).where(eq(courses.nivel, NUDOS_COURSE.nivel)).limit(1);
-  if (existing.length > 0) return;
+  if (existing.length > 0) {
+    // Bases creadas con la práctica 3D: se reemplaza por las fotos del manual
+    const mods = await db.select().from(modules).where(eq(modules.courseId, existing[0].id));
+    for (const m of mods) {
+      const fresh = NUDOS_MODULES.find((x) => x.numero === m.numero);
+      if (fresh && m.contenidoMarkdown?.includes("minijuego:")) {
+        await db.update(modules).set({ contenidoMarkdown: fresh.contenidoMarkdown }).where(eq(modules.id, m.id));
+      }
+    }
+    if (mods.some((m) => m.numero === 6)) {
+      const m6 = mods.find((m) => m.numero === 6)!;
+      if (!m6.contenidoMarkdown?.includes("identificar:")) {
+        await db.update(modules).set({ contenidoMarkdown: NUDOS_MODULES[5].contenidoMarkdown }).where(eq(modules.id, m6.id));
+      }
+    }
+    return;
+  }
 
   const [course] = await db.insert(courses).values(NUDOS_COURSE).returning();
   for (const { questions, ...m } of NUDOS_MODULES) {

@@ -10,7 +10,7 @@ import {
   AlertCircle, Trophy, Award, Mail, Star, QrCode
 } from "lucide-react";
 import { toast } from "sonner";
-import { KnotChallenge } from "@/components/KnotGame";
+import { KnotPhotoQuiz } from "@/components/KnotPhotoQuiz";
 
 // Nivel cuyo examen final arranca con la práctica de los tres nudos
 const KNOT_COURSE_LEVEL = 2;
@@ -173,9 +173,9 @@ export default function FinalExam() {
 
           {level === KNOT_COURSE_LEVEL && (
             <div className="mb-6">
-              <h2 className="font-bold text-[#1B5E20] mb-1">Parte práctica: armá los tres nudos</h2>
+              <h2 className="font-bold text-[#1B5E20] mb-1">Parte práctica: reconocé los nudos</h2>
               <p className="text-sm text-gray-500 mb-3">
-                Con el mouse (o el dedo) arrastrá el chicote de la soga para lograr el ballestrinque, el ocho y el dinámico.
+                En cada foto del manual elegí qué nudo es y para qué sirve. Necesitás acertar todos para rendir las preguntas.
               </p>
               {knotsDone ? (
                 <div className="flex items-center gap-2 bg-[#E8F5E9] border border-[#C8E6C9] rounded-lg p-3">
@@ -183,7 +183,11 @@ export default function FinalExam() {
                   <span className="text-sm text-[#1B5E20] font-medium">Parte práctica aprobada. Ya podés rendir las preguntas.</span>
                 </div>
               ) : (
-                <KnotChallenge onComplete={() => setKnotsDone(true)} />
+                <KnotPhotoQuiz
+                  title="Identificá los nudos del curso"
+                  ids={["ballestrinque", "ocho-chicote", "dinamico", "ocho-seno", "prusik", "alondra"]}
+                  onComplete={() => setKnotsDone(true)}
+                />
               )}
             </div>
           )}

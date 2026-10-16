@@ -13,7 +13,8 @@ import {
 import { toast } from "sonner";
 import { Streamdown } from "streamdown";
 import { createModuleResetState, getNextModuleTransition } from "@shared/moduleNavigation";
-import { KnotGame, parseKnotMarker } from "@/components/KnotGame";
+import { KnotPhotoQuiz } from "@/components/KnotPhotoQuiz";
+import { parseIdentifyMarker } from "@/components/knotPhotos";
 import { CourseSidebar, suggestionsHref } from "@/components/CourseSidebar";
 
 type Phase = "content" | "exam" | "result";
@@ -144,9 +145,9 @@ export default function ModulePage() {
   // CONTENT PHASE
   // ============================================================
   if (phase === "content") {
-    const { knot, content } = parseKnotMarker(moduleData?.content ?? "");
+    const { ids: knotIds, content } = parseIdentifyMarker(moduleData?.content ?? "");
     const knotKey = `${level}-${moduleNumber}`;
-    const knotPending = !!knot && knotDoneFor !== knotKey && moduleData?.progress?.passed !== 1;
+    const knotPending = knotIds.length > 0 && knotDoneFor !== knotKey && moduleData?.progress?.passed !== 1;
     return (
       <div className="min-h-screen bg-[#F8FAF5]">
         <CourseSidebar level={level} moduleNumber={moduleNumber} courseTitle={moduleData?.courseTitle} />
@@ -220,12 +221,13 @@ export default function ModulePage() {
           )}
 
           <div className="bg-white rounded-2xl shadow-sm border border-[#E8F5E9] p-6 md:p-8 prose prose-green max-w-none">
-            <Streamdown>{content}</Streamdown>
+            {/* Streamdown bloquea imágenes con ruta relativa: las figuras del sitio van con URL absoluta */}
+            <Streamdown>{content.replace(/\]\(\//g, `](${window.location.origin}/`)}</Streamdown>
           </div>
 
-          {knot && (
+          {knotIds.length > 0 && (
             <div className="mt-6">
-              <KnotGame key={knotKey} knot={knot} onComplete={() => setKnotDoneFor(knotKey)} />
+              <KnotPhotoQuiz key={knotKey} ids={knotIds} onComplete={() => setKnotDoneFor(knotKey)} />
             </div>
           )}
 
@@ -245,7 +247,7 @@ export default function ModulePage() {
               className="bg-[#1B5E20] hover:bg-[#2E7D32] text-white font-semibold px-8"
             >
               <ClipboardList className="w-4 h-4 mr-2" />
-              {knotPending ? "Completá el nudo para rendir" : moduleData?.progress?.passed === 1 ? "Repetir examen" : "Ir al examen"}
+              {knotPending ? "Identificá los nudos para rendir" : moduleData?.progress?.passed === 1 ? "Repetir examen" : "Ir al examen"}
               <ChevronRight className="w-4 h-4 ml-2" />
             </Button>
           </div>

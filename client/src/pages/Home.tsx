@@ -1,9 +1,10 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { LeadDialog, type LeadInterest } from "@/components/LeadDialog";
+import { KNOT_PHOTOS } from "@/components/knotPhotos";
 import {
   ArrowRight, Award, BookOpen, Building2, Check, ChevronDown, Compass, Heart, Menu, MessageSquare,
-  Mail, Mountain, Move3d, QrCode, ShieldCheck, Sparkles, Star, Users, X,
+  Mail, Mountain, QrCode, ShieldCheck, Sparkles, Star, Users, X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
@@ -30,7 +31,7 @@ const UPCOMING = [
 const FAQ = [
   { q: "¿Cuánto cuesta?", a: "El Nivel 0 es gratis para siempre. El resto de los cursos se sostienen con un esquema de colaboración: aportás lo que podés y eso financia contenidos nuevos y certificaciones verificables." },
   { q: "¿Es oficial? ¿Los parques lo aceptan?", a: "CumbreCert cuenta con el respaldo del CCAM y guías certificados AAGM. Estamos en proceso de acuerdos con administraciones de parques provinciales y nacionales; cada acuerdo nuevo se comunica en la web." },
-  { q: "¿Cómo es la práctica de nudos en 3D?", a: "En el Curso de Nudos movés una soga real en 3D con el mouse o el dedo: la pasás por detrás del mosquetón girando la cámara, armás el ocho, el dinámico y el ballestrinque y al final la ajustás tirando del chicote." },
+  { q: "¿Cómo se practica en el Curso de Nudos?", a: "Cada módulo muestra las figuras del manual con el nombre del nudo y para qué sirve. Antes de rendir, tenés que reconocer en las fotos qué nudo es cada uno y su uso." },
   { q: "¿El certificado vence?", a: "Sí, tiene una vigencia de 2 años y se renueva con una evaluación de actualización. Así el certificado refleja conocimiento real y vigente." },
   { q: "¿Cómo se verifica un certificado?", a: "Cada certificado tiene un código QR único. Cualquier guardaparque, guía o refugio puede escanearlo o cargar el código en cumbrecert para ver si es válido." },
   { q: "¿Puedo hacerlo desde el celular?", a: "Sí, todo el sitio y las prácticas funcionan en el celular. Tu progreso queda guardado." },
@@ -80,7 +81,7 @@ export default function Home() {
 
   const NAV = [
     ["cursos", "Cursos"],
-    ["practica-3d", "Práctica 3D"],
+    ["nudos", "Nudos"],
     ["planes", "Planes"],
     ["verificar", "Verificar"],
     ["faq", "Preguntas"],
@@ -154,7 +155,7 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               className="inline-flex items-center gap-2 bg-white/10 border border-white/20 backdrop-blur px-3 py-1 rounded-full text-xs font-medium mb-6"
             >
-              <Sparkles className="w-3.5 h-3.5 text-[#8BC34A]" /> Nuevo: Curso de Nudos con práctica 3D
+              <Sparkles className="w-3.5 h-3.5 text-[#8BC34A]" /> Nuevo: Curso de Nudos de Montaña
             </motion.span>
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
@@ -283,7 +284,7 @@ export default function Home() {
                 >
                   {isNudos && (
                     <span className="absolute -top-3 left-6 text-[11px] font-bold bg-[#8BC34A] text-[#10331A] px-3 py-1 rounded-full flex items-center gap-1">
-                      <Move3d className="w-3 h-3" /> NUEVO · PRÁCTICA 3D
+                      <Sparkles className="w-3 h-3" /> NUEVO
                     </span>
                   )}
                   <div className="flex items-center justify-between mb-4">
@@ -337,57 +338,33 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ============ PRÁCTICA 3D ============ */}
-      <section id="practica-3d" className="bg-[#0f2b14] text-white py-20 md:py-28 overflow-hidden">
-        <div className="max-w-6xl mx-auto px-4 grid lg:grid-cols-2 gap-12 items-center">
-          <motion.div {...fadeUp}>
-            <p className="text-xs font-bold tracking-widest text-[#AED581] mb-2">APRENDER HACIENDO</p>
-            <h2 className="text-3xl md:text-5xl font-bold mb-5">Armá los nudos con una soga real en 3D</h2>
-            <p className="text-white/75 mb-8">
-              No alcanza con leer. En el Curso de Nudos tomás el chicote, girás la cámara para pasar la cuerda por detrás del
-              mosquetón y la ajustás tirando, como en la pared. Si el nudo no está bien hecho, no avanzás.
-            </p>
-            <ul className="space-y-3 mb-8">
-              {[
-                "Soga trenzada con física y colisiones",
-                "Ocho, dinámico (UIAA) y ballestrinque",
-                "Funciona en la compu y en el celular",
-                "Es parte del examen para certificar",
-              ].map((t) => (
-                <li key={t} className="flex items-center gap-3 text-white/90">
-                  <span className="w-6 h-6 rounded-full bg-[#8BC34A]/20 flex items-center justify-center">
-                    <Check className="w-3.5 h-3.5 text-[#AED581]" />
-                  </span>
-                  {t}
-                </li>
+      {/* ============ NUDOS ============ */}
+      <section id="nudos" className="bg-[#0f2b14] text-white py-20 md:py-28 overflow-hidden">
+        <div className="max-w-6xl mx-auto px-4">
+          <motion.div {...fadeUp} className="grid lg:grid-cols-[1fr_1.4fr] gap-10 items-center">
+            <div>
+              <p className="text-xs font-bold tracking-widest text-[#AED581] mb-2">CURSO DE NUDOS</p>
+              <h2 className="text-3xl md:text-5xl font-bold mb-5">Reconocé cada nudo y sabé para qué sirve</h2>
+              <p className="text-white/75 mb-8">
+                Basado en el Manual de Iniciación al Montañismo: cuerdas, ocho, dinámico, ballestrinque, cintas y autobloqueantes.
+                Antes de cada examen identificás en las figuras qué nudo es y cuándo se usa.
+              </p>
+              <Link href={startHref} className="inline-flex items-center gap-2 bg-[#8BC34A] hover:bg-[#9CCC65] text-[#10331A] font-bold px-6 py-3 rounded-full">
+                Empezar el Curso de Nudos <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {KNOT_PHOTOS.filter((k) => ["ocho-chicote", "dinamico", "ballestrinque", "prusik", "alondra", "cinta"].includes(k.id)).map((k) => (
+                <div key={k.id} className="bg-white rounded-xl overflow-hidden text-[#2D2D2D]">
+                  <div className="h-28 flex items-center justify-center p-2">
+                    <img src={k.foto} alt={k.nombre} className="max-h-full max-w-full object-contain" loading="lazy" />
+                  </div>
+                  <div className="px-3 py-2 border-t border-[#E8F5E9]">
+                    <p className="text-sm font-bold text-[#1B5E20] leading-tight">{k.nombre}</p>
+                    <p className="text-[11px] text-gray-500 leading-snug">{k.uso}</p>
+                  </div>
+                </div>
               ))}
-            </ul>
-            <Link href={startHref} className="inline-flex items-center gap-2 bg-[#8BC34A] hover:bg-[#9CCC65] text-[#10331A] font-bold px-6 py-3 rounded-full">
-              Probar el Curso de Nudos <ArrowRight className="w-4 h-4" />
-            </Link>
-          </motion.div>
-          <motion.div {...fadeUp} className="relative">
-            <div className="aspect-[4/3] rounded-3xl bg-gradient-to-br from-[#1B5E20] to-[#0b2410] border border-white/10 p-8 flex items-center justify-center relative overflow-hidden">
-              <svg viewBox="0 0 300 220" className="w-full h-full">
-                <defs>
-                  <linearGradient id="metal" x1="0" x2="1">
-                    <stop offset="0" stopColor="#94a3b8" />
-                    <stop offset="0.5" stopColor="#f1f5f9" />
-                    <stop offset="1" stopColor="#64748b" />
-                  </linearGradient>
-                  <pattern id="braid" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-                    <rect width="8" height="8" fill="#e8601c" />
-                    <rect width="4" height="8" fill="#c2410c" />
-                  </pattern>
-                </defs>
-                <path d="M150 20 C120 20 115 50 115 80 L115 160 C115 195 140 205 160 200 C190 195 195 170 195 150 L200 70 C202 40 185 20 150 20 Z" fill="none" stroke="url(#metal)" strokeWidth="9" />
-                <rect x="192" y="70" width="14" height="40" rx="3" fill="#d4a017" />
-                <path d="M10 210 C60 190 90 160 112 140 C130 125 128 110 112 104 C96 98 98 84 116 82 C134 80 134 66 116 62 C100 58 104 44 122 46" fill="none" stroke="url(#braid)" strokeWidth="11" strokeLinecap="round" />
-                <path d="M118 120 C140 130 150 160 170 210" fill="none" stroke="url(#braid)" strokeWidth="11" strokeLinecap="round" />
-              </svg>
-              <span className="absolute bottom-4 left-4 text-xs bg-white/10 backdrop-blur px-3 py-1.5 rounded-full flex items-center gap-1.5">
-                <Move3d className="w-3.5 h-3.5" /> Girá · Arrastrá · Ajustá
-              </span>
             </div>
           </motion.div>
         </div>
@@ -444,8 +421,8 @@ export default function Home() {
                 icon: Heart,
                 name: "Colaborador",
                 tag: "Colaboración",
-                desc: "Acceso a todos los cursos y prácticas 3D.",
-                items: ["Todos los niveles disponibles", "Prácticas interactivas 3D", "Certificados QR verificables", "Acceso anticipado a cursos nuevos"],
+                desc: "Acceso a todos los cursos y prácticas.",
+                items: ["Todos los niveles disponibles", "Prácticas interactivas", "Certificados QR verificables", "Acceso anticipado a cursos nuevos"],
                 cta: "Quiero colaborar",
                 action: () => setLead({ interes: "colaborar" }),
                 featured: true,
@@ -669,7 +646,7 @@ export default function Home() {
             <p className="font-semibold text-white mb-3">Plataforma</p>
             <ul className="space-y-2 text-sm">
               <li><button onClick={() => go("cursos")} className="hover:text-white">Cursos</button></li>
-              <li><button onClick={() => go("practica-3d")} className="hover:text-white">Práctica 3D</button></li>
+              <li><button onClick={() => go("nudos")} className="hover:text-white">Curso de Nudos</button></li>
               <li><button onClick={() => go("verificar")} className="hover:text-white">Verificar certificado</button></li>
             </ul>
           </div>

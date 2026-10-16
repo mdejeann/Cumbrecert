@@ -2,8 +2,8 @@
 // NIVEL 2 — Curso de Nudos de Montaña (seed data)
 // Fuente principal: "Manual de Iniciación al Montañismo" (Iniciación al Alpinismo),
 // capítulos 1 (material) y 2 (nudos).
-// Los módulos con la marca <!-- minijuego:... --> muestran la práctica con la soga
-// antes del examen (ver client/src/components/KnotGame.tsx).
+// Los módulos con la marca <!-- identificar:... --> muestran la actividad de reconocer
+// nudos en fotos antes del examen (ver client/src/components/KnotPhotoQuiz.tsx).
 // ============================================================
 
 type Letter = "a" | "b" | "c" | "d";
@@ -21,7 +21,7 @@ export const NUDOS_COURSE = {
   nivel: 2,
   titulo: "Curso de Nudos de Montaña",
   descripcion:
-    "Cuerdas, terminología y los nudos esenciales del montañista: ocho, dinámico (UIAA), ballestrinque, gaza, alondra, nudo de cinta y autobloqueantes. Con práctica interactiva de soga.",
+    "Cuerdas, terminología y los nudos esenciales del montañista: ocho, dinámico (UIAA), ballestrinque, gaza, alondra, nudo de cinta y autobloqueantes. Con las figuras del manual para reconocer cada nudo.",
   precio: 0,
   activo: 1,
 };
@@ -164,11 +164,25 @@ Un ocho por chicote con los dos extremos enfrentados sirve para unir dos cuerdas
 - La gaza que abraza el arnés es chica, del tamaño de un puño.
 - El cabo sobrante es largo y, si querés, lo rematás con un nudo de seguridad.
 
-## Práctica con la soga
+## Los ochos en las figuras del manual
 
-Abajo tenés la soga virtual. Arrastrá el **chicote** con el mouse (o el dedo) por los puntos numerados para formar el ocho. Al completarlo se habilita el examen.
+![Ocho por chicote](/nudos/ocho-chicote.png)
 
-<!-- minijuego:ocho -->
+*Ocho por chicote: para encordarse al arnés (figura 19).*
+
+![Ocho enfrentado](/nudos/ocho-unir-cuerdas.png)
+
+*Ocho enfrentado: para unir dos cuerdas y rapelar (figura 20).*
+
+![Ocho por seno](/nudos/ocho-seno.png)
+
+*Ocho por seno: para autoasegurarse en una reunión (figura 21).*
+
+## Identificá los nudos
+
+Antes del examen, reconocé en cada foto qué nudo es y para qué sirve.
+
+<!-- identificar:ocho-chicote,ocho-seno,ocho-unir-cuerdas -->
 `,
     questions: [
       { pregunta: "¿Para qué se usa principalmente el nudo de ocho por chicote?", opcionA: "Para asegurar con mosquetón HMS", opcionB: "Para encordarse", opcionC: "Para hacer anillos de cinta", opcionD: "Como autobloqueante", respuestaCorrecta: "b" },
@@ -204,11 +218,15 @@ El nudo "se da vuelta" dentro del mosquetón cuando cambiás de dar cuerda a rec
 - Con **doble cuerda**, lo ideal es un mosquetón independiente para cada cuerda, separados para que no rocen entre sí.
 - Riza la cuerda: es un precio aceptable a cambio de no depender de ningún aparato.
 
-## Práctica con la soga
+## El dinámico en la figura del manual
 
-Formá el nudo dinámico sobre el mosquetón arrastrando el chicote por los puntos.
+![Nudo dinámico (UIAA)](/nudos/dinamico.png)
 
-<!-- minijuego:dinamico -->
+*Nudo dinámico (UIAA): para asegurar al compañero o rapelar con un mosquetón HMS (figura 22). De izquierda a derecha: la cuerda entra al mosquetón, se forma la segunda gaza y se la mete también.*
+
+## Identificá los nudos
+
+<!-- identificar:dinamico,ocho-seno -->
 `,
     questions: [
       { pregunta: "¿Qué material mínimo requiere el nudo dinámico?", opcionA: "Un descensor ocho", opcionB: "Un mosquetón HMS", opcionC: "Dos cordinos", opcionD: "Un Grigri", respuestaCorrecta: "b" },
@@ -246,11 +264,19 @@ Para **regular** la distancia a la reunión, aflojá el nudo y corré cuerda de 
 
 Es elemental pero muy práctico: sirve para anclajes en nieve, para atar cabos de autoseguro y para evitar palancas en anclajes. Se arma pasando un seno alrededor del soporte y metiendo los cabos por dentro del seno.
 
-## Práctica con la soga
+## Las figuras del manual
 
-Formá el ballestrinque sobre el mosquetón arrastrando el chicote por los puntos.
+![Ballestrinque](/nudos/ballestrinque.png)
 
-<!-- minijuego:ballestrinque -->
+*Ballestrinque: autoaseguro regulable sin sacarlo del mosquetón (figura 23).*
+
+![Alondra](/nudos/alondra.png)
+
+*Alondra: anclajes en nieve, cabos de autoseguro y evitar palancas (figura 28).*
+
+## Identificá los nudos
+
+<!-- identificar:ballestrinque,alondra,dinamico -->
 `,
     questions: [
       { pregunta: "¿Para qué se usa el ballestrinque?", opcionA: "Para encordarse", opcionB: "Para autoasegurarse y montar repartos", opcionC: "Para unir cuerdas en rápel", opcionD: "Como nudo de cinta", respuestaCorrecta: "b" },
@@ -293,9 +319,43 @@ Al recibir tracción **se bloquean por fricción** sobre la cuerda; al descargar
 
 La mayoría funciona bien con **cordinos de 7 mm**. Con menor diámetro agarran más, pero cuestan aflojarlos y pueden ser demasiado débiles. Muchos se llaman genéricamente "prusik", por el más conocido.
 
+## Las figuras del manual
+
+![Nudo de cinta](/nudos/cinta.png)
+
+*Nudo de cinta: unir los extremos de una cinta plana (figura 24).*
+
+![Gaza por chicote](/nudos/gaza-chicote.png)
+
+*Gaza por chicote: nudo auxiliar para encordarse o hacer anillos (figura 25).*
+
+![Gaza por seno](/nudos/gaza-seno.png)
+
+*Gaza por seno: gaza rápida como nudo auxiliar (figura 26).*
+
+![Gaza para cordino](/nudos/gaza-cordino.png)
+
+*Gaza para cordino: cerrar un cordino en un anillo (figura 27).*
+
+![Machard simple](/nudos/machard-simple.png)
+
+*Machard simple: autobloqueante con gran agarre en cuerda mojada (figura 29).*
+
+![Machard doble](/nudos/machard-doble.png)
+
+*Machard doble: autobloqueante que desliza muy bien (figura 30).*
+
+![Prusik](/nudos/prusik.png)
+
+*Prusik: subir o bajar por cuerda fija y maniobras de rescate (figura 31).*
+
+## Identificá los nudos
+
+<!-- identificar:cinta,gaza-chicote,machard-simple,prusik -->
+
 ## Antes del examen final
 
-En el examen final vas a tener que **armar con la soga los tres nudos clave**, ballestrinque, ocho y dinámico, antes de responder las preguntas integradoras.
+En el examen final vas a tener que **reconocer en las fotos los nudos del curso** y para qué sirve cada uno, antes de responder las preguntas integradoras.
 `,
     questions: [
       { pregunta: "¿Con qué nudo deben unirse las cintas planas?", opcionA: "Gaza", opcionB: "Nudo de cinta (plano repasado)", opcionC: "Ballestrinque", opcionD: "Alondra", respuestaCorrecta: "b" },
