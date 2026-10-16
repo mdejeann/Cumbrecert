@@ -17,6 +17,8 @@ import AdminQuestions from "./pages/admin/AdminQuestions";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminCertificates from "./pages/admin/AdminCertificates";
 import AdminDatabase from "./pages/admin/AdminDatabase";
+import AdminLeads from "./pages/admin/AdminLeads";
+import Verificar from "./pages/Verificar";
 
 function Router() {
   return (
@@ -25,6 +27,8 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
+      <Route path="/verificar" component={Verificar} />
+      <Route path="/verificar/:codigo" component={Verificar} />
 
       {/* Authenticated user routes */}
       <Route path="/dashboard" component={Dashboard} />
@@ -39,6 +43,7 @@ function Router() {
       <Route path="/admin/usuarios" component={AdminUsers} />
       <Route path="/admin/certificados" component={AdminCertificates} />
       <Route path="/admin/base-de-datos" component={AdminDatabase} />
+      <Route path="/admin/leads" component={AdminLeads} />
 
       {/* Fallback */}
       <Route path="/404" component={NotFound} />

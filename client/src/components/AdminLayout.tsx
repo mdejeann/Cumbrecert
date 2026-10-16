@@ -11,8 +11,7 @@ import {
   LogOut,
   ChevronRight,
   Mountain,
-  Shield,
-} from "lucide-react";
+  Shield, Megaphone } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
@@ -25,6 +24,7 @@ const navItems = [
   { href: "/admin/preguntas", label: "Preguntas de Examen", icon: HelpCircle },
   { href: "/admin/usuarios", label: "Usuarios", icon: Users },
   { href: "/admin/certificados", label: "Certificados", icon: Award },
+  { href: "/admin/leads", label: "Leads y contactos", icon: Megaphone },
   { href: "/admin/base-de-datos", label: "Base de Datos", icon: Database },
 ];
 

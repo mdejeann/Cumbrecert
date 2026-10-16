@@ -2,6 +2,8 @@
 // Uses the Biz-provided storage proxy (Authorization: Bearer <token>)
 
 import { ENV } from './_core/env';
+import fs from 'fs/promises';
+import path from 'path';
 
 type StorageConfig = { baseUrl: string; apiKey: string };
 
@@ -72,6 +74,7 @@ export async function storagePut(
   data: Buffer | Uint8Array | string,
   contentType = "application/octet-stream"
 ): Promise<{ key: string; url: string }> {
+  if (!ENV.forgeApiUrl) return storagePutLocal(relKey, data);
   const { baseUrl, apiKey } = getStorageConfig();
   const key = normalizeKey(relKey);
   const uploadUrl = buildUploadUrl(baseUrl, key);
@@ -92,7 +95,22 @@ export async function storagePut(
   return { key, url };
 }
 
+export const LOCAL_UPLOADS_DIR = path.resolve(process.cwd(), "data/uploads");
+
+// Sin el storage de Manus: guarda el archivo en data/uploads y lo sirve en /uploads
+async function storagePutLocal(relKey: string, data: Buffer | Uint8Array | string) {
+  const key = normalizeKey(relKey);
+  const filePath = path.join(LOCAL_UPLOADS_DIR, key);
+  await fs.mkdir(path.dirname(filePath), { recursive: true });
+  await fs.writeFile(filePath, data);
+  return { key, url: `/uploads/${key}` };
+}
+
 export async function storageGet(relKey: string): Promise<{ key: string; url: string; }> {
+  if (!ENV.forgeApiUrl) {
+    const key = normalizeKey(relKey);
+    return { key, url: `/uploads/${key}` };
+  }
   const { baseUrl, apiKey } = getStorageConfig();
   const key = normalizeKey(relKey);
   return {

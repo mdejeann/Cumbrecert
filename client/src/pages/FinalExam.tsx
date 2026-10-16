@@ -10,6 +10,10 @@ import {
   AlertCircle, Trophy, Award, Mail, Star, QrCode
 } from "lucide-react";
 import { toast } from "sonner";
+import { KnotChallenge } from "@/components/KnotGame";
+
+// Nivel cuyo examen final arranca con la práctica de los tres nudos
+const KNOT_COURSE_LEVEL = 2;
 
 type Phase = "intro" | "exam" | "result";
 
@@ -29,6 +33,8 @@ export default function FinalExam() {
   const finalModuleNumber = level === 0 ? 6 : moduleCount + 1;
 
   const [phase, setPhase] = useState<Phase>("intro");
+  const [knotsDone, setKnotsDone] = useState(false);
+  const knotsPending = level === KNOT_COURSE_LEVEL && !knotsDone;
   const [answers, setAnswers] = useState<(number | null)[]>([]);
   const [result, setResult] = useState<{
     score: number;
@@ -165,6 +171,23 @@ export default function FinalExam() {
             </CardContent>
           </Card>
 
+          {level === KNOT_COURSE_LEVEL && (
+            <div className="mb-6">
+              <h2 className="font-bold text-[#1B5E20] mb-1">Parte práctica: armá los tres nudos</h2>
+              <p className="text-sm text-gray-500 mb-3">
+                Con el mouse (o el dedo) arrastrá el chicote de la soga para lograr el ballestrinque, el ocho y el dinámico.
+              </p>
+              {knotsDone ? (
+                <div className="flex items-center gap-2 bg-[#E8F5E9] border border-[#C8E6C9] rounded-lg p-3">
+                  <CheckCircle className="w-5 h-5 text-[#8BC34A]" />
+                  <span className="text-sm text-[#1B5E20] font-medium">Parte práctica aprobada. Ya podés rendir las preguntas.</span>
+                </div>
+              ) : (
+                <KnotChallenge onComplete={() => setKnotsDone(true)} />
+              )}
+            </div>
+          )}
+
           <div className="flex gap-3">
             <Button
               variant="outline"
@@ -174,6 +197,7 @@ export default function FinalExam() {
               Repasar módulos
             </Button>
             <Button
+              disabled={knotsPending}
               onClick={() => setPhase("exam")}
               className="flex-1 bg-[#1B5E20] hover:bg-[#2E7D32] text-white font-semibold py-3"
             >

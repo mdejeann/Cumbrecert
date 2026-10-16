@@ -8,11 +8,13 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
   Mountain, ChevronLeft, ChevronRight, BookOpen, ClipboardList,
-  CheckCircle, XCircle, Loader2, Clock, AlertCircle, Trophy
+  CheckCircle, XCircle, Loader2, Clock, AlertCircle, Trophy, MessageSquare
 } from "lucide-react";
 import { toast } from "sonner";
 import { Streamdown } from "streamdown";
 import { createModuleResetState, getNextModuleTransition } from "@shared/moduleNavigation";
+import { KnotGame, parseKnotMarker } from "@/components/KnotGame";
+import { CourseSidebar, suggestionsHref } from "@/components/CourseSidebar";
 
 type Phase = "content" | "exam" | "result";
 
@@ -26,6 +28,8 @@ export default function ModulePage() {
 
   const [phase, setPhase] = useState<Phase>("content");
   const [answers, setAnswers] = useState<(number | null)[]>([]);
+  // Práctica de nudos aprobada, por módulo ("nivel-módulo")
+  const [knotDoneFor, setKnotDoneFor] = useState<string | null>(null);
   const [result, setResult] = useState<{ score: number; passed: boolean; correct: number; total: number; certificate?: any; corrections?: any[] } | null>(null);
 
   // Wouter keeps the same component mounted when only the module parameter changes.
@@ -140,8 +144,12 @@ export default function ModulePage() {
   // CONTENT PHASE
   // ============================================================
   if (phase === "content") {
+    const { knot, content } = parseKnotMarker(moduleData?.content ?? "");
+    const knotKey = `${level}-${moduleNumber}`;
+    const knotPending = !!knot && knotDoneFor !== knotKey && moduleData?.progress?.passed !== 1;
     return (
       <div className="min-h-screen bg-[#F8FAF5]">
+        <CourseSidebar level={level} moduleNumber={moduleNumber} courseTitle={moduleData?.courseTitle} />
         {/* Header */}
         <div className="bg-white border-b border-[#E8F5E9] sticky top-0 z-40 shadow-sm">
           <div className="max-w-3xl mx-auto px-4 py-3 flex items-center gap-3">
@@ -212,8 +220,14 @@ export default function ModulePage() {
           )}
 
           <div className="bg-white rounded-2xl shadow-sm border border-[#E8F5E9] p-6 md:p-8 prose prose-green max-w-none">
-            <Streamdown>{moduleData?.content ?? ""}</Streamdown>
+            <Streamdown>{content}</Streamdown>
           </div>
+
+          {knot && (
+            <div className="mt-6">
+              <KnotGame key={knotKey} knot={knot} onComplete={() => setKnotDoneFor(knotKey)} />
+            </div>
+          )}
 
           {/* Action buttons */}
           <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-between">
@@ -227,12 +241,23 @@ export default function ModulePage() {
             </Button>
             <Button
               onClick={handleStartExam}
+              disabled={knotPending}
               className="bg-[#1B5E20] hover:bg-[#2E7D32] text-white font-semibold px-8"
             >
               <ClipboardList className="w-4 h-4 mr-2" />
-              {moduleData?.progress?.passed === 1 ? "Repetir examen" : "Ir al examen"}
+              {knotPending ? "Completá el nudo para rendir" : moduleData?.progress?.passed === 1 ? "Repetir examen" : "Ir al examen"}
               <ChevronRight className="w-4 h-4 ml-2" />
             </Button>
+          </div>
+
+          <div className="mt-4 text-center">
+            <a
+              href={suggestionsHref(moduleData?.courseTitle, level, moduleNumber)}
+              className="inline-flex items-center gap-2 text-sm text-[#1B5E20] hover:underline"
+            >
+              <MessageSquare className="w-4 h-4" />
+              Sugerencias y comentarios sobre este módulo
+            </a>
           </div>
         </div>
       </div>

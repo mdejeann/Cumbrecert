@@ -1,5 +1,7 @@
 import { and, eq, desc, sql } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/mysql2";
+import { drizzle } from "drizzle-orm/libsql";
+import { migrate } from "drizzle-orm/libsql/migrator";
+import path from "path";
 import {
   certificates,
   courseProgress,
@@ -11,6 +13,8 @@ import {
   InsertModule,
   InsertModuleProgress,
   InsertUser,
+  InsertLead,
+  leads,
   moduleProgress,
   modules,
   users,
@@ -21,9 +25,19 @@ import { nanoid } from "nanoid";
 let _db: ReturnType<typeof drizzle> | null = null;
 
 export async function getDb() {
-  if (!_db && process.env.DATABASE_URL) {
+  if (!_db) {
     try {
-      _db = drizzle(process.env.DATABASE_URL);
+      const url = process.env.DATABASE_URL || "file:./data/cumbrecert.db";
+      if (url.startsWith("file:")) {
+        const fs = await import("fs");
+        fs.mkdirSync(path.dirname(url.slice(5)), { recursive: true });
+      }
+      const db = drizzle(url);
+      await migrate(db, { migrationsFolder: path.resolve(process.cwd(), "drizzle/sqlite") });
+      const { seedIfEmpty, ensureNudosCourse } = await import("./seed");
+      await seedIfEmpty(db);
+      await ensureNudosCourse(db);
+      _db = db;
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
       _db = null;
@@ -57,13 +71,14 @@ export async function upsertUser(user: InsertUser): Promise<void> {
     if (user.region !== undefined) { values.region = user.region; updateSet.region = user.region; }
     if (user.passwordHash !== undefined) { values.passwordHash = user.passwordHash; updateSet.passwordHash = user.passwordHash; }
     if (user.lastSignedIn !== undefined) { values.lastSignedIn = user.lastSignedIn; updateSet.lastSignedIn = user.lastSignedIn; }
-    if (user.role !== undefined) { values.role = user.role; updateSet.role = user.role; }
+    if (values.email && ENV.adminEmails.includes(values.email.toLowerCase())) { values.role = "admin"; updateSet.role = "admin"; }
+    else if (user.role !== undefined) { values.role = user.role; updateSet.role = user.role; }
     else if (user.openId === ENV.ownerOpenId) { values.role = "admin"; updateSet.role = "admin"; }
 
     if (!values.lastSignedIn) values.lastSignedIn = new Date();
     if (Object.keys(updateSet).length === 0) updateSet.lastSignedIn = new Date();
 
-    await db.insert(users).values(values).onDuplicateKeyUpdate({ set: updateSet });
+    await db.insert(users).values(values).onConflictDoUpdate({ target: users.openId, set: updateSet });
   } catch (error) {
     console.error("[Database] Failed to upsert user:", error);
     throw error;
@@ -132,7 +147,8 @@ export async function getCourseProgress(userId: number) {
 export async function upsertCourseProgress(data: InsertCourseProgress) {
   const db = await getDb();
   if (!db) return;
-  await db.insert(courseProgress).values(data).onDuplicateKeyUpdate({
+  await db.insert(courseProgress).values(data).onConflictDoUpdate({
+    target: courseProgress.userId,
     set: {
       nivel0Completado: data.nivel0Completado,
       nivel1Completado: data.nivel1Completado,
@@ -180,7 +196,8 @@ export async function getModuleProgressEntry(userId: number, courseLevel: number
 export async function upsertModuleProgress(data: InsertModuleProgress) {
   const db = await getDb();
   if (!db) return;
-  await db.insert(moduleProgress).values(data).onDuplicateKeyUpdate({
+  await db.insert(moduleProgress).values(data).onConflictDoUpdate({
+    target: [moduleProgress.userId, moduleProgress.courseLevel, moduleProgress.moduleNumber],
     set: {
       examScore: data.examScore,
       passed: data.passed,
@@ -350,12 +367,11 @@ export async function deleteQuestion(id: number) {
 export async function getTableStats() {
   const db = await getDb();
   if (!db) return [];
-  const tableNames = ["users", "courses", "modules", "exam_questions", "course_progress", "module_progress", "certificates"];
+  const tableNames = ["users", "courses", "modules", "exam_questions", "course_progress", "module_progress", "certificates", "leads"];
   const stats = await Promise.all(
     tableNames.map(async (t) => {
       try {
-        const result = await db.execute(sql`SELECT COUNT(*) as count FROM ${sql.identifier(t)}`);
-        const rows = result[0] as unknown as { count: number }[];
+        const rows = await db.all<{ count: number }>(sql`SELECT COUNT(*) as count FROM ${sql.identifier(t)}`);
         return { table: t, count: Number(rows[0]?.count ?? 0) };
       } catch {
         return { table: t, count: 0 };
@@ -370,4 +386,20 @@ export async function getCourseById(id: number) {
   if (!db) return null;
   const result = await db.select().from(courses).where(eq(courses.id, id)).limit(1);
   return result.length > 0 ? result[0] : null;
+}
+
+// ============================================================
+// LEADS (marketing)
+// ============================================================
+
+export async function createLead(data: InsertLead) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.insert(leads).values(data);
+}
+
+export async function getAllLeads() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(leads).orderBy(desc(leads.createdAt));
 }

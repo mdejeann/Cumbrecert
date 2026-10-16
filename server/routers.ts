@@ -393,6 +393,37 @@ export const appRouter = router({
 
   admin: adminRouter,
 
+  // Catálogo público para el landing: cada curso activo nuevo aparece solo
+  catalog: publicProcedure.query(async () => {
+    const all = (await db.getAllCourses()).filter((c) => c.activo === 1);
+    return Promise.all(
+      all.map(async (c) => ({
+        nivel: c.nivel,
+        titulo: c.titulo,
+        descripcion: c.descripcion,
+        gratis: c.precio === 0,
+        modulos: (await getLearnerModules(c.id)).length,
+      }))
+    );
+  }),
+
+  leads: router({
+    create: publicProcedure
+      .input(
+        z.object({
+          email: z.email(),
+          nombre: z.string().max(120).optional(),
+          region: z.string().max(80).optional(),
+          interes: z.enum(["newsletter", "colaborar", "clubes", "guias"]).default("newsletter"),
+          mensaje: z.string().max(2000).optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        await db.createLead({ ...input, email: input.email.toLowerCase() });
+        return { success: true };
+      }),
+  }),
+
   certificates: router({
     getMyCertificates: protectedProcedure.query(async ({ ctx }) => {
       const certs = await db.getCertificatesByUser(ctx.user.id);

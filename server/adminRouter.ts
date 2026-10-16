@@ -20,6 +20,11 @@ export const adminRouter = router({
     return { tables: tableStats };
   }),
 
+  // ── Leads (marketing) ────────────────────────────────────────
+  getLeads: adminProcedure.query(async () => {
+    return await db.getAllLeads();
+  }),
+
   // ── Users ────────────────────────────────────────────────────
   getUsers: adminProcedure.query(async () => {
     return await db.getAllUsers();
