@@ -123,7 +123,7 @@ export default function AdminDatabase() {
               },
               {
                 name: "courses",
-                fields: ["id", "nivel", "titulo", "descripcion", "precio", "activo", "createdAt"],
+                fields: ["id", "nivel", "titulo", "descripcion", "activo", "createdAt"],
               },
               {
                 name: "modules",

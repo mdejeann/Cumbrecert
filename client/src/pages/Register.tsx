@@ -58,7 +58,7 @@ export default function Register() {
           <CardHeader className="text-center pb-2">
             <CardTitle className="text-2xl font-bold text-[#1B5E20]">Crear cuenta</CardTitle>
             <CardDescription className="text-gray-500">
-              Comenzá tu certificación de montaña gratis
+              Comenzá tu certificación de montaña
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -140,7 +140,7 @@ export default function Register() {
               {/* Benefits list */}
               <div className="bg-[#F1F8E9] rounded-lg p-3 space-y-2">
                 {[
-                  "Nivel Inicial completamente gratis",
+                  "Nivel Inicial con modalidad de colaboración",
                   "Certificado QR verificable al aprobar",
                   "Acceso a todos los módulos de formación",
                 ].map((benefit) => (
@@ -162,7 +162,7 @@ export default function Register() {
                     Creando cuenta...
                   </>
                 ) : (
-                  "Crear cuenta gratis"
+                  "Crear cuenta"
                 )}
               </Button>
 

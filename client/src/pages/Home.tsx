@@ -95,7 +95,7 @@ export default function Home() {
           <div className="hidden sm:flex items-center gap-2">
             {user ? (
               <Link href="/dashboard">
-                <button className="btn-cta">Mi dashboard</button>
+                <button className="btn-cta">Mis Cursos</button>
               </Link>
             ) : (
               <>
@@ -103,7 +103,7 @@ export default function Home() {
                   <button className="text-sm font-medium text-[#1B5E20] hover:underline px-3 py-2">Iniciar sesión</button>
                 </Link>
                 <Link href="/register">
-                  <button className="btn-cta">Comenzá gratis</button>
+                  <button className="btn-cta">Comenzá</button>
                 </Link>
               </>
             )}
@@ -150,7 +150,7 @@ export default function Home() {
               Preguntas
             </button>
             <button className="btn-cta-secondary w-full mt-4">
-              Comenzá gratis
+              Comenzá
             </button>
           </div>
         )}
@@ -203,11 +203,6 @@ export default function Home() {
             transition={{ duration: 0.6, delay: 0.6 }}
             className="flex flex-col sm:flex-row gap-4 justify-center items-center"
           >
-            <Link href={user ? "/dashboard" : "/register"}>
-              <button className="btn-cta bg-white text-[#1B5E20] hover:bg-[#F1F8E9]">
-                {user ? "Ir a mi dashboard" : "Comenzá tu certificación gratis"}
-              </button>
-            </Link>
             <button onClick={() => scrollToSection("niveles")} className="text-white hover:text-[#8BC34A] transition flex items-center gap-2">
               ¿Ya tenés experiencia? Ver todos los niveles →
             </button>
@@ -309,7 +304,7 @@ export default function Home() {
 
           <div className="text-center mt-8">
             <Link href={user ? "/dashboard" : "/register"}>
-              <button className="btn-cta">Comenzá tu certificación gratis</button>
+              <button className="btn-cta">Comenzá tu certificación</button>
             </Link>
           </div>
         </div>
@@ -362,7 +357,7 @@ export default function Home() {
           <div className="text-center mt-12">
             <Link href={user ? "/dashboard" : "/register"}>
               <button className="btn-cta-secondary">
-                Comenzá tu certificación gratis
+                Comenzá tu certificación
               </button>
             </Link>
           </div>
@@ -392,17 +387,15 @@ export default function Home() {
               {
                 level: "NIVEL 0",
                 name: "Explorador Iniciante",
-                price: "GRATIS",
-                badge: "free",
+                badge: "collaboration",
                 modules: ["Qué llevar", "Calzado", "Hidratación", "Señalización básica", "Clima"],
                 for: "Primera vez en la montaña, o quienes quieren validar sus conocimientos básicos.",
-                cta: "Empezar ahora — gratis",
+                cta: "Empezar ahora",
               },
               {
                 level: "NIVEL 1",
                 name: "Senderista Certificado",
-                price: "USD 20",
-                badge: "price",
+                badge: "collaboration",
                 modules: ["Orientación", "Primeros auxilios", "Leave No Trace", "Ecosistemas"],
                 for: "Senderistas con experiencia que quieren el certificado QR reconocido.",
                 cta: "Ver contenidos",
@@ -410,8 +403,7 @@ export default function Home() {
               {
                 level: "NIVEL 2",
                 name: "Trekker Avanzado",
-                price: "USD 50",
-                badge: "coming",
+                badge: "coming-collaboration",
                 modules: ["Navegación GPS", "Condiciones extremas", "Bivouac", "Rescate básico"],
                 for: "Trekkers que hacen travesías de varios días en zonas remotas.",
                 cta: "Anotarme en lista de espera",
@@ -419,8 +411,7 @@ export default function Home() {
               {
                 level: "NIVEL 3",
                 name: "Montaña Responsable",
-                price: "USD 100",
-                badge: "coming",
+                badge: "coming-collaboration",
                 modules: ["Liderazgo", "Alta montaña", "Glaciares", "Gestión de grupos"],
                 for: "Quien quiere liderar grupos o prepararse para guía profesional.",
                 cta: "Anotarme en lista de espera",
@@ -431,28 +422,22 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: i * 0.1 }}
-                className="border-2 border-[#C8E6C9] rounded-lg p-6 hover:shadow-lg transition"
+                className="group border border-[#C8E6C9] bg-gradient-to-br from-white to-[#F8FCF6] rounded-2xl p-6 shadow-[0_14px_35px_-24px_rgba(27,94,32,0.8)] hover:-translate-y-1 hover:shadow-[0_20px_45px_-24px_rgba(27,94,32,0.9)] transition-all duration-200"
               >
                 <div className="flex items-start justify-between mb-4">
                   <div>
-                    <p className="text-sm font-bold text-[#1B5E20]">{level.level}</p>
+                    <p className="text-xs font-bold tracking-[0.18em] text-[#689F38]">{level.level}</p>
                     <h3 className="text-2xl font-bold text-[#1B5E20]">
                       {level.name}
                     </h3>
                   </div>
-                  {level.badge === "free" && (
-                    <span className="badge-free">GRATIS</span>
+                  {level.badge.includes("collaboration") && (
+                    <span className="badge-free shadow-sm">COLABORACIÓN</span>
                   )}
-                  {level.badge === "coming" && (
-                    <span className="badge-coming">Próximamente</span>
+                  {level.badge.includes("coming") && (
+                    <span className="badge-coming shadow-sm">Próximamente</span>
                   )}
                 </div>
-
-                {level.badge === "price" && (
-                  <p className="text-lg font-bold text-[#1B5E20] mb-4">
-                    {level.price}
-                  </p>
-                )}
 
                 <p className="text-sm text-[#666] mb-4">{level.for}</p>
 
@@ -465,7 +450,7 @@ export default function Home() {
                   ))}
                 </div>
 
-                <Link href={level.badge === "free" ? (user ? "/dashboard" : "/register") : "#"}>
+                <Link href={level.badge.includes("collaboration") && level.level === "NIVEL 0" ? (user ? "/dashboard" : "/register") : "#"}>
                   <button className="btn-cta w-full text-center">
                     {level.cta}
                   </button>
@@ -475,7 +460,7 @@ export default function Home() {
           </div>
 
           <p className="text-center text-sm text-[#666] mt-8">
-            Los niveles 2 y 3 están en desarrollo. Anotate en la lista de espera y recibís acceso anticipado con descuento.
+            Los niveles 2 y 3 están en desarrollo. Anotate en la lista de espera y recibís acceso anticipado.
           </p>
         </div>
       </section>
@@ -580,7 +565,7 @@ export default function Home() {
           <div className="text-center">
             <Link href={user ? "/dashboard" : "/register"}>
               <button className="btn-cta-secondary">
-                Comenzá tu certificación gratis
+                Comenzá tu certificación
               </button>
             </Link>
           </div>
@@ -670,8 +655,8 @@ export default function Home() {
           <div className="space-y-4">
             {[
               {
-                q: "¿Es gratuito?",
-                a: "El Nivel Inicial (Explorador Iniciante) es completamente gratuito: podés estudiar todos los módulos, hacer la evaluación y recibir tu certificado QR sin pagar nada. Los niveles superiores tienen un costo que varía entre USD 20 y USD 100.",
+                q: "¿Cómo funciona la colaboración?",
+                a: "CumbreCert sostiene sus contenidos y certificaciones mediante un esquema de colaboración. Podés estudiar los módulos, rendir las evaluaciones y recibir orientación sobre el proceso desde la plataforma.",
               },
               {
                 q: "¿Es oficial? ¿Los parques lo aceptan?",
@@ -683,7 +668,7 @@ export default function Home() {
               },
               {
                 q: "¿El certificado vence?",
-                a: "Sí. El certificado del Nivel Inicial tiene vigencia de 2 años. Renovarlo es gratuito si aprobás una evaluación de actualización. Esto garantiza que el conocimiento sea real y no solo un papel viejo.",
+                a: "Sí. El certificado del Nivel Inicial tiene vigencia de 2 años. La renovación se gestiona mediante una nueva evaluación de actualización. Esto garantiza que el conocimiento sea real y no solo un papel viejo.",
               },
               {
                 q: "¿Puedo hacerlo desde el celular?",
@@ -806,10 +791,16 @@ export default function Home() {
 
           <div className="border-t border-gray-700 pt-8">
             <Link href={user ? "/dashboard" : "/register"}>
-              <button className="btn-cta w-full md:w-auto mb-8">
-                Comenzá tu certificación gratis
+              <button className="btn-cta w-full md:w-auto mb-4">
+                Comenzá tu certificación
               </button>
             </Link>
+            <a
+              href="mailto:info@cumbrecert.com?subject=Sugerencias%20y%20comentarios"
+              className="btn-cta-secondary inline-flex w-full md:w-auto justify-center mb-8"
+            >
+              Sugerencias y comentarios
+            </a>
             <p className="text-xs text-gray-500">
               © 2026 CumbreCert. Todos los derechos reservados. ·{" "}
               <a href="#" className="hover:text-gray-400">

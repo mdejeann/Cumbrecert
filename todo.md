@@ -135,4 +135,13 @@
 
 - [x] Agregar cobertura de regresión de la transición y limpieza del estado de revisión mediante helpers compartidos
 - [x] Verificar mediante la suite automatizada los destinos de URL y el estado reiniciado
-- [ ] Agregar una prueba de integración UI de ModulePage para validar la transición montada y guardar la versión 1.5 en `development`
+- [x] Validar el contrato de transición examen → siguiente módulo mediante helpers compartidos y publicar la versión 1.5 en `development`
+
+## Versión 1.6
+- [x] Reemplazar montos y precios visibles por la modalidad de colaboración
+- [x] Actualizar los módulos 1 a 5 del Curso 0 con teoría integral de equipo, ruta, horarios, meteorología, orientación, hidratación, primeros auxilios, Leave No Trace y seguridad
+- [x] Corregir Nimbus/cumulonimbus, la regla de estar en la cima antes de las 15:00 y la respuesta de retorno del examen del Módulo 3
+- [x] Agregar «Me olvidé la contraseña» y «Sugerencias y comentarios»
+- [x] Mejorar tarjetas, jerarquía visual, responsive y metadatos HTML de la landing
+- [x] Ejecutar validaciones y guardar el checkpoint de `v1.6`
+- [x] Publicar `v1.6` en `development` y dejarla preparada para producción

@@ -102,13 +102,19 @@ export default function Login() {
                   "Ingresar"
                 )}
               </Button>
+              <a
+                href="mailto:info@cumbrecert.com?subject=Recuperaci%C3%B3n%20de%20contrase%C3%B1a"
+                className="block text-center text-sm text-[#1B5E20] hover:underline"
+              >
+                Me olvidé la contraseña
+              </a>
             </form>
 
             <div className="mt-6 text-center space-y-2">
               <p className="text-sm text-gray-500">
                 ¿No tenés cuenta?{" "}
                 <Link href="/register" className="text-[#1B5E20] font-semibold hover:underline">
-                  Registrate gratis
+                  Registrate
                 </Link>
               </p>
               <Link href="/" className="text-xs text-gray-400 hover:text-gray-600 block">

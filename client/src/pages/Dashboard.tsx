@@ -14,7 +14,6 @@ import { toast } from "sonner";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 const LEVEL_NAMES = ["Explorador Iniciante", "Senderista Certificado", "Trekker Avanzado", "Montaña Responsable", "Curso Teórico de Senderista"];
-const LEVEL_PRICES = ["GRATIS", "USD 20", "USD 50", "USD 100", "USD 30"];
 const LEVEL_COLORS = ["#8BC34A", "#2196F3", "#FF9800", "#9C27B0", "#FF5722"];
 
 type DashboardModule = {
@@ -205,7 +204,6 @@ function OtherCoursesSection({ user: _user }: { user: any }) {
       <Accordion type="single" collapsible defaultValue="available-course-0" className="space-y-4">
         {courses.map((course: any) => {
           const isSelected = Boolean(course.enrolled);
-          const displayPrice = Number(course.precio) === 0 ? "GRATIS" : `USD ${course.precio}`;
           return (
             <AccordionItem
               key={course.id}
@@ -232,8 +230,8 @@ function OtherCoursesSection({ user: _user }: { user: any }) {
                   </div>
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-3 border-t border-[#E8F5E9]">
                     <div>
-                      <p className="text-xs text-gray-500">Precio</p>
-                      <p className="text-lg font-bold text-[#1B5E20]">{displayPrice}</p>
+                      <p className="text-xs text-gray-500">Modalidad</p>
+                      <p className="text-lg font-bold text-[#1B5E20]">Colaboración</p>
                     </div>
                     {isSelected ? (
                       <Button
@@ -405,7 +403,7 @@ export default function Dashboard() {
         <div>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-[#1B5E20]">Nivel 0 — Explorador Iniciante</h2>
-            <Badge className="bg-[#8BC34A] text-[#1A1A1A] font-semibold">GRATIS</Badge>
+            <Badge className="bg-[#8BC34A] text-[#1A1A1A] font-semibold">COLABORACIÓN</Badge>
           </div>
 
           <Card className="border-[#C8E6C9] shadow-sm overflow-hidden">

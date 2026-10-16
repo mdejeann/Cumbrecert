@@ -10,11 +10,10 @@ type CourseForm = {
   nivel: number;
   titulo: string;
   descripcion: string;
-  precio: number;
   activo: number;
 };
 
-const EMPTY_FORM: CourseForm = { nivel: 0, titulo: "", descripcion: "", precio: 0, activo: 1 };
+const EMPTY_FORM: CourseForm = { nivel: 0, titulo: "", descripcion: "", activo: 1 };
 
 export default function AdminCourses() {
   const utils = trpc.useUtils();
@@ -61,15 +60,6 @@ export default function AdminCourses() {
                   type="number"
                   value={editing.nivel}
                   onChange={(e) => setEditing({ ...editing, nivel: Number(e.target.value) })}
-                  className="w-full bg-[#0d1117] border border-[#30363d] rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#1B5E20]"
-                />
-              </div>
-              <div>
-                <label className="text-xs text-[#8b949e] mb-1 block">Precio (USD cents, 0 = gratis)</label>
-                <input
-                  type="number"
-                  value={editing.precio}
-                  onChange={(e) => setEditing({ ...editing, precio: Number(e.target.value) })}
                   className="w-full bg-[#0d1117] border border-[#30363d] rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#1B5E20]"
                 />
               </div>
@@ -134,7 +124,7 @@ export default function AdminCourses() {
                 <tr className="border-b border-[#30363d] text-[#8b949e]">
                   <th className="text-left px-4 py-3 font-medium">Nivel</th>
                   <th className="text-left px-4 py-3 font-medium">Título</th>
-                  <th className="text-left px-4 py-3 font-medium">Precio</th>
+                  <th className="text-left px-4 py-3 font-medium">Modalidad</th>
                   <th className="text-left px-4 py-3 font-medium">Estado</th>
                   <th className="text-right px-4 py-3 font-medium">Acciones</th>
                 </tr>
@@ -146,8 +136,8 @@ export default function AdminCourses() {
                       <span className="bg-[#1B5E20] text-white text-xs font-bold px-2 py-1 rounded">N{course.nivel}</span>
                     </td>
                     <td className="px-4 py-3 text-white font-medium">{course.titulo}</td>
-                    <td className="px-4 py-3 text-[#8b949e]">
-                      {course.precio === 0 ? <span className="text-[#8BC34A] font-medium">Gratis</span> : `USD ${(course.precio / 100).toFixed(2)}`}
+                    <td className="px-4 py-3 text-[#8BC34A] font-medium">
+                      Colaboración
                     </td>
                     <td className="px-4 py-3">
                       <span className={`text-xs px-2 py-1 rounded-full font-medium ${course.activo ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"}`}>
@@ -156,7 +146,7 @@ export default function AdminCourses() {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <button
-                        onClick={() => setEditing({ id: course.id, nivel: course.nivel, titulo: course.titulo, descripcion: course.descripcion ?? "", precio: course.precio, activo: course.activo })}
+                        onClick={() => setEditing({ id: course.id, nivel: course.nivel, titulo: course.titulo, descripcion: course.descripcion ?? "", activo: course.activo })}
                         className="text-[#8b949e] hover:text-[#8BC34A] transition p-1 rounded"
                       >
                         <Edit2 className="w-4 h-4" />
